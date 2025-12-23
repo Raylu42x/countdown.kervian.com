@@ -1,73 +1,82 @@
-const daysEl = document.getElementById("days");
-const hoursEl = document.getElementById("hours");
-const minutesEl = document.getElementById("minutes");
-const secondsEl = document.getElementById("seconds");
-const targetLabel = document.getElementById("targetLabel");
+const els = {
+  days: document.getElementById("days"),
+  hours: document.getElementById("hours"),
+  minutes: document.getElementById("minutes"),
+  seconds: document.getElementById("seconds"),
+  label: document.getElementById("targetLabel"),
+  date: document.getElementById("dateInput"),
+  time: document.getElementById("timeInput"),
+  tz: document.getElementById("timezoneSelect"),
+  settings: document.getElementById("settings")
+};
 
-const dateInput = document.getElementById("dateInput");
-const timeInput = document.getElementById("timeInput");
-const timezoneSelect = document.getElementById("timezoneSelect");
-
-const settings = document.getElementById("settings");
-
-document.getElementById("openSettings").onclick = () => settings.showModal();
+document.getElementById("openSettings").onclick = () => els.settings.showModal();
 document.getElementById("save").onclick = saveSettings;
 document.getElementById("share").onclick = shareLink;
 
-const timeZones = Intl.supportedValuesOf("timeZone");
+/* ------------------ Time Zones ------------------ */
 
-timeZones.forEach(tz => {
-  const opt = document.createElement("option");
-  opt.value = tz;
-  opt.textContent = tz;
-  timezoneSelect.appendChild(opt);
+Intl.supportedValuesOf("timeZone").forEach(z => {
+  const o = document.createElement("option");
+  o.value = z;
+  o.textContent = z;
+  els.tz.appendChild(o);
 });
+
+/* ------------------ State ------------------ */
 
 const params = new URLSearchParams(location.search);
 
-let targetDate = params.get("date") || "2025-12-25";
-let targetTime = params.get("time") || "08:00";
-let targetZone = params.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone;
+let state = {
+  date: params.get("date") || "2025-12-25",
+  time: params.get("time") || "08:00",
+  tz: params.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone
+};
 
-dateInput.value = targetDate;
-timeInput.value = targetTime;
-timezoneSelect.value = targetZone;
+els.date.value = state.date;
+els.time.value = state.time;
+els.tz.value = state.tz;
 
-function saveSettings() {
-  targetDate = dateInput.value;
-  targetTime = timeInput.value;
-  targetZone = timezoneSelect.value;
-  settings.close();
-}
+/* ------------------ Core Logic ------------------ */
 
-function shareLink() {
-  const url = `${location.origin}${location.pathname}?date=${targetDate}&time=${targetTime}&tz=${encodeURIComponent(targetZone)}`;
-  navigator.clipboard.writeText(url);
-  alert("Share link copied to clipboard");
+// Converts date+time in a TZ → UTC timestamp
+function toUTC(date, time, tz) {
+  const parts = new Date(`${date}T${time}:00`);
+  const locale = parts.toLocaleString("en-US", { timeZone: tz });
+  return new Date(locale).getTime();
 }
 
 function updateCountdown() {
-  const now = new Date();
-  const target = new Date(
-    new Date(`${targetDate}T${targetTime}:00`).toLocaleString("en-US", { timeZone: targetZone })
-  );
-
-  const diff = target - now;
+  const now = Date.now();
+  const targetUTC = toUTC(state.date, state.time, state.tz);
+  const diff = targetUTC - now;
 
   if (diff <= 0) return;
 
-  const d = Math.floor(diff / 86400000);
-  const h = Math.floor(diff / 3600000) % 24;
-  const m = Math.floor(diff / 60000) % 60;
-  const s = Math.floor(diff / 1000) % 60;
+  els.days.textContent = Math.floor(diff / 86400000);
+  els.hours.textContent = Math.floor(diff / 3600000) % 24;
+  els.minutes.textContent = Math.floor(diff / 60000) % 60;
+  els.seconds.textContent = Math.floor(diff / 1000) % 60;
 
-  daysEl.textContent = d;
-  hoursEl.textContent = h;
-  minutesEl.textContent = m;
-  secondsEl.textContent = s;
-
-  targetLabel.textContent = `Counting down to ${targetDate} at ${targetTime} (${targetZone})`;
+  els.label.textContent =
+    `Counting down to ${state.date} at ${state.time} (${state.tz})`;
 }
 
 setInterval(updateCountdown, 1000);
 updateCountdown();
+
+/* ------------------ Actions ------------------ */
+
+function saveSettings() {
+  state.date = els.date.value;
+  state.time = els.time.value;
+  state.tz = els.tz.value;
+  els.settings.close();
+}
+
+function shareLink() {
+  const url = new URL(location.href);
+  url.search = new URLSearchParams(state).toString();
+  navigator.clipboard.writeText(url.toString());
+  alert("Share link copied");
+}
