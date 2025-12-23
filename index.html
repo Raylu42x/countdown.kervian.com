@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Custom Countdown</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header>
+    <h1>Countdown</h1>
+    <p id="targetLabel"></p>
+  </header>
+
+  <main>
+    <div id="countdown">
+      <div><span id="days">0</span><label>Days</label></div>
+      <div><span id="hours">0</span><label>Hours</label></div>
+      <div><span id="minutes">0</span><label>Minutes</label></div>
+      <div><span id="seconds">0</span><label>Seconds</label></div>
+    </div>
+
+    <button id="openSettings">Customize</button>
+    <button id="share">Share Link</button>
+  </main>
+
+  <dialog id="settings">
+    <h2>Settings</h2>
+
+    <label>
+      Date
+      <input type="date" id="dateInput">
+    </label>
+
+    <label>
+      Time
+      <input type="time" id="timeInput">
+    </label>
+
+    <label>
+      Time Zone
+      <select id="timezoneSelect"></select>
+    </label>
+
+    <div class="actions">
+      <button id="save">Save</button>
+      <button onclick="settings.close()">Cancel</button>
+    </div>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>
