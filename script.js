@@ -10,11 +10,17 @@ const els = {
   settings: document.getElementById("settings")
 };
 
-document.getElementById("openSettings").onclick = () => els.settings.showModal();
-document.getElementById("save").onclick = saveSettings;
-document.getElementById("share").onclick = shareLink;
+document.getElementById("openSettings").onclick =
+  () => els.settings.showModal();
 
-/* ------------------ Time Zones ------------------ */
+document.getElementById("save").onclick = () => {
+  state.date = els.date.value;
+  state.time = els.time.value;
+  state.tz = els.tz.value;
+  els.settings.close();
+};
+
+/* ---------- Time Zones ---------- */
 
 Intl.supportedValuesOf("timeZone").forEach(z => {
   const o = document.createElement("option");
@@ -23,35 +29,38 @@ Intl.supportedValuesOf("timeZone").forEach(z => {
   els.tz.appendChild(o);
 });
 
-/* ------------------ State ------------------ */
-
-const params = new URLSearchParams(location.search);
+/* ---------- State ---------- */
 
 let state = {
-  date: params.get("date") || "2025-12-25",
-  time: params.get("time") || "08:00",
-  tz: params.get("tz") || Intl.DateTimeFormat().resolvedOptions().timeZone
+  date: "2025-12-25",
+  time: "08:00",
+  tz: Intl.DateTimeFormat().resolvedOptions().timeZone
 };
 
 els.date.value = state.date;
 els.time.value = state.time;
 els.tz.value = state.tz;
 
-/* ------------------ Core Logic ------------------ */
+/* ---------- Countdown ---------- */
 
-// Converts date+time in a TZ → UTC timestamp
 function toUTC(date, time, tz) {
-  const parts = new Date(`${date}T${time}:00`);
-  const locale = parts.toLocaleString("en-US", { timeZone: tz });
-  return new Date(locale).getTime();
+  const local = new Date(`${date}T${time}:00`);
+  return new Date(
+    local.toLocaleString("en-US", { timeZone: tz })
+  ).getTime();
 }
 
 function updateCountdown() {
   const now = Date.now();
-  const targetUTC = toUTC(state.date, state.time, state.tz);
-  const diff = targetUTC - now;
+  const target = toUTC(state.date, state.time, state.tz);
+  const diff = target - now;
 
   if (diff <= 0) return;
+
+  const hoursLeft = diff / 3600000;
+
+  document.body.classList.toggle("final12", hoursLeft <= 12);
+  document.body.classList.toggle("final1", hoursLeft <= 1);
 
   els.days.textContent = Math.floor(diff / 86400000);
   els.hours.textContent = Math.floor(diff / 3600000) % 24;
@@ -59,24 +68,51 @@ function updateCountdown() {
   els.seconds.textContent = Math.floor(diff / 1000) % 60;
 
   els.label.textContent =
-    `Counting down to ${state.date} at ${state.time} (${state.tz})`;
+    `Counting down to ${state.date} at ${state.time}`;
 }
 
 setInterval(updateCountdown, 1000);
 updateCountdown();
 
-/* ------------------ Actions ------------------ */
+/* ---------- Snow ---------- */
 
-function saveSettings() {
-  state.date = els.date.value;
-  state.time = els.time.value;
-  state.tz = els.tz.value;
-  els.settings.close();
+const canvas = document.getElementById("snow");
+const ctx = canvas.getContext("2d");
+
+let flakes = [];
+
+function resize() {
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
 }
 
-function shareLink() {
-  const url = new URL(location.href);
-  url.search = new URLSearchParams(state).toString();
-  navigator.clipboard.writeText(url.toString());
-  alert("Share link copied");
+window.onresize = resize;
+resize();
+
+function makeFlake() {
+  return {
+    x: Math.random() * canvas.width,
+    y: -10,
+    r: Math.random() * 3 + 1,
+    s: Math.random() * 1 + 0.5
+  };
 }
+
+function snow() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (flakes.length < 200) flakes.push(makeFlake());
+
+  flakes.forEach(f => {
+    f.y += f.s;
+    ctx.beginPath();
+    ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255,255,255,0.8)";
+    ctx.fill();
+  });
+
+  flakes = flakes.filter(f => f.y < canvas.height + 10);
+  requestAnimationFrame(snow);
+}
+
+snow();
