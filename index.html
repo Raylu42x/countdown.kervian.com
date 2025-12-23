@@ -1,54 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Custom Countdown</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Winter Countdown</title>
+<style>
+:root {
+  --bg-dark: #020617;
+  --bg-light: #0f172a;
+  --fg: #e5e7eb;
+  --accent: #7dd3fc;
+  --accent-hot: #f8fafc;
+}
+* { box-sizing: border-box; font-family: system-ui, sans-serif; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #1e3a8a, var(--bg-dark));
+  color: var(--fg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+canvas#snow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+header, main {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+#countdown {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+#countdown div {
+  background: rgba(255,255,255,0.06);
+  padding: 1.2rem;
+  border-radius: 14px;
+  backdrop-filter: blur(8px);
+  transition: box-shadow 0.5s, transform 0.5s;
+}
+#countdown span {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(125,211,252,0.4);
+}
+body.final12 #countdown div { box-shadow: 0 0 18px rgba(125,211,252,0.35); }
+body.final1 #countdown span {
+  color: var(--accent-hot);
+  text-shadow: 0 0 24px rgba(248,250,252,0.9);
+  animation: pulse 1s infinite;
+}
+@keyframes pulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.05);} }
+button {
+  margin-top: 1rem;
+  padding: 0.6rem 1.3rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #020617;
+  font-weight: 700;
+  cursor: pointer;
+}
+dialog {
+  border: none;
+  border-radius: 18px;
+  padding: 1.5rem;
+  max-width: 320px;
+}
+label { display: block; margin: 0.5rem 0; }
+.actions { display:flex; justify-content:flex-end; gap:0.5rem; }
+</style>
 </head>
 <body>
 
-  <header>
-    <h1>Countdown</h1>
-    <p id="targetLabel"></p>
-  </header>
+<canvas id="snow"></canvas>
 
-  <main>
-    <div id="countdown">
-      <div><span id="days">0</span><label>Days</label></div>
-      <div><span id="hours">0</span><label>Hours</label></div>
-      <div><span id="minutes">0</span><label>Minutes</label></div>
-      <div><span id="seconds">0</span><label>Seconds</label></div>
-    </div>
+<header>
+  <h1>Winter Countdown</h1>
+  <p id="targetLabel"></p>
+</header>
 
-    <button id="openSettings">Customize</button>
-  </main>
+<main>
+  <div id="countdown">
+    <div><span id="days">0</span><label>Days</label></div>
+    <div><span id="hours">0</span><label>Hours</label></div>
+    <div><span id="minutes">0</span><label>Minutes</label></div>
+    <div><span id="seconds">0</span><label>Seconds</label></div>
+  </div>
+  <button id="openSettings">Customize</button>
+</main>
 
-  <dialog id="settings">
-    <h2>Settings</h2>
+<dialog id="settings">
+  <h2>Settings</h2>
+  <label>Date <input type="date" id="dateInput"></label>
+  <label>Time <input type="time" id="timeInput"></label>
+  <label>Time Zone <select id="timezoneSelect"></select></label>
+  <div class="actions">
+    <button id="save">Save</button>
+    <button onclick="settings.close()">Cancel</button>
+  </div>
+</dialog>
 
-    <label>
-      Date
-      <input type="date" id="dateInput">
-    </label>
+<script>
+const els = {
+  days: document.getElementById("days"),
+  hours: document.getElementById("hours"),
+  minutes: document.getElementById("minutes"),
+  seconds: document.getElementById("seconds"),
+  label: document.getElementById("targetLabel"),
+  date: document.getElementById("dateInput"),
+  time: document.getElementById("timeInput"),
+  tz: document.getElementById("timezoneSelect"),
+  settings: document.getElementById("settings")
+};
 
-    <label>
-      Time
-      <input type="time" id="timeInput">
-    </label>
+document.getElementById("openSettings").onclick = () => els.settings.showModal();
+document.getElementById("save").onclick = () => {
+  state.date = els.date.value;
+  state.time = els.time.value;
+  state.tz = els.tz.value;
+  els.settings.close();
+};
 
-    <label>
-      Time Zone
-      <select id="timezoneSelect"></select>
-    </label>
+/* Time zones */
+Intl.supportedValuesOf("timeZone").forEach(z => {
+  const o = document.createElement("option");
+  o.value = z;
+  o.textContent = z;
+  els.tz.appendChild(o);
+});
 
-    <div class="actions">
-      <button id="save">Save</button>
-      <button onclick="settings.close()">Cancel</button>
-    </div>
-  </dialog>
+/* State */
+let state = {
+  date: "2025-12-25",
+  time: "08:00",
+  tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+};
 
-  <script src="script.js"></script>
-  <canvas id="snow"></canvas>
+els.date.value = state.date;
+els.time.value = state.time;
+els.tz.value = state.tz;
+
+/* Countdown */
+function toUTC(date,time,tz){
+  const local = new Date(`${date}T${time}:00`);
+  return new Date(local.toLocaleString("en-US",{timeZone:tz})).getTime();
+}
+
+function updateCountdown(){
+  const now=Date.now();
+  const target=toUTC(state.date,state.time,state.tz);
+  const diff=target-now;
+  if(diff<=0) return;
+
+  const hoursLeft = diff/3600000;
+  document.body.classList.toggle("final12", hoursLeft<=12);
+  document.body.classList.toggle("final1", hoursLeft<=1);
+
+  els.days.textContent=Math.floor(diff/86400000);
+  els.hours.textContent=Math.floor(diff/3600000)%24;
+  els.minutes.textContent=Math.floor(diff/60000)%60;
+  els.seconds.textContent=Math.floor(diff/1000)%60;
+  els.label.textContent=`Counting down to ${state.date} at ${state.time}`;
+}
+
+setInterval(updateCountdown,1000);
+updateCountdown();
+
+/* Snow animation */
+const canvas=document.getElementById("snow");
+const ctx=canvas.getContext("2d");
+let flakes=[];
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}
+window.onresize=resize;
+resize();
+function makeFlake(){return{x:Math.random()*canvas.width,y:-10,r:Math.random()*3+1,s:Math.random()*1+0.5};}
+function snow(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(flakes.length<200) flakes.push(makeFlake());
+  flakes.forEach(f=>{f.y+=f.s;ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,0.8)";ctx.fill();});
+  flakes=flakes.filter(f=>f.y<canvas.height+10);
+  requestAnimationFrame(snow);
+}
+snow();
+</script>
+
 </body>
 </html>
