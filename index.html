@@ -3,196 +3,219 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Winter Countdown</title>
+<title>New Year Countdown</title>
+
 <style>
 :root {
-  --bg-dark: #020617;
-  --bg-light: #0f172a;
-  --fg: #e5e7eb;
-  --accent: #7dd3fc;
-  --accent-hot: #f8fafc;
+  --bg-dark:#020617;
+  --fg:#f8fafc;
+  --gold:#facc15;
+  --gold-hot:#fde68a;
 }
-* { box-sizing: border-box; font-family: system-ui, sans-serif; }
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #1e3a8a, var(--bg-dark));
-  color: var(--fg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  overflow: hidden;
+
+*{box-sizing:border-box;font-family:system-ui,sans-serif}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at top,#312e81,var(--bg-dark));
+  color:var(--fg);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  text-align:center;
 }
-canvas#snow {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+
+canvas{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
 }
-header, main {
-  position: relative;
-  z-index: 1;
-  text-align: center;
+
+h1{
+  letter-spacing:.12em;
 }
-#countdown {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
-  margin: 2rem 0;
+
+#countdown{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1.2rem;
+  margin-top:2rem;
 }
-#countdown div {
-  background: rgba(255,255,255,0.06);
-  padding: 1.2rem;
-  border-radius: 14px;
-  backdrop-filter: blur(8px);
-  transition: box-shadow 0.5s, transform 0.5s;
+
+.box{
+  background:rgba(255,255,255,.08);
+  padding:1.3rem;
+  border-radius:18px;
+  backdrop-filter:blur(10px);
+  transition:.5s;
 }
-#countdown span {
-  font-size: 2.6rem;
-  font-weight: 800;
-  color: var(--accent);
-  text-shadow: 0 0 12px rgba(125,211,252,0.4);
+
+.box span{
+  font-size:3rem;
+  font-weight:900;
+  color:var(--gold);
+  text-shadow:0 0 18px rgba(250,204,21,.7);
 }
-body.final12 #countdown div { box-shadow: 0 0 18px rgba(125,211,252,0.35); }
-body.final1 #countdown span {
-  color: var(--accent-hot);
-  text-shadow: 0 0 24px rgba(248,250,252,0.9);
-  animation: pulse 1s infinite;
+
+/* FINAL HOUR */
+body.final-hour{
+  background:radial-gradient(circle at top,#701a75,#020617);
 }
-@keyframes pulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.05);} }
-button {
-  margin-top: 1rem;
-  padding: 0.6rem 1.3rem;
-  border: none;
-  border-radius: 10px;
-  background: var(--accent);
-  color: #020617;
-  font-weight: 700;
-  cursor: pointer;
+body.final-hour .box{
+  box-shadow:0 0 30px rgba(250,204,21,.6);
+  transform:translateY(-4px);
 }
-dialog {
-  border: none;
-  border-radius: 18px;
-  padding: 1.5rem;
-  max-width: 320px;
+
+/* FINAL MINUTE */
+#secondsOnly{
+  display:none;
+  font-size:8rem;
+  font-weight:900;
+  color:var(--gold-hot);
+  text-shadow:0 0 40px rgba(253,230,138,1);
 }
-label { display: block; margin: 0.5rem 0; }
-.actions { display:flex; justify-content:flex-end; gap:0.5rem; }
+
+/* FINAL 10 */
+body.final-10 #secondsOnly{
+  animation:pulse .6s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.15)}
+}
+
+button{
+  margin-top:2rem;
+  padding:.9rem 1.6rem;
+  border:none;
+  border-radius:14px;
+  background:var(--gold);
+  font-weight:900;
+  cursor:pointer;
+}
+
+/* Mobile */
+@media(max-width:700px){
+  #countdown{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
 </style>
 </head>
+
 <body>
 
-<canvas id="snow"></canvas>
+<canvas id="fx"></canvas>
 
-<header>
-  <h1>Winter Countdown</h1>
-  <p id="targetLabel"></p>
-</header>
+<h1>🎆 NEW YEAR COUNTDOWN 🎆</h1>
 
-<main>
-  <div id="countdown">
-    <div><span id="days">0</span><label>Days</label></div>
-    <div><span id="hours">0</span><label>Hours</label></div>
-    <div><span id="minutes">0</span><label>Minutes</label></div>
-    <div><span id="seconds">0</span><label>Seconds</label></div>
-  </div>
-  <button id="openSettings">Customize</button>
-</main>
+<div id="countdown">
+  <div class="box"><span id="d">0</span><div>Days</div></div>
+  <div class="box"><span id="h">0</span><div>Hours</div></div>
+  <div class="box"><span id="m">0</span><div>Minutes</div></div>
+  <div class="box"><span id="s">0</span><div>Seconds</div></div>
+</div>
 
-<dialog id="settings">
-  <h2>Settings</h2>
-  <label>Date <input type="date" id="dateInput"></label>
-  <label>Time <input type="time" id="timeInput"></label>
-  <label>Time Zone <select id="timezoneSelect"></select></label>
-  <div class="actions">
-    <button id="save">Save</button>
-    <button onclick="settings.close()">Cancel</button>
-  </div>
-</dialog>
+<div id="secondsOnly">60</div>
+
+<button id="start">🔊 Enter Fullscreen & Enable Sound</button>
+
+<audio id="tick" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.wav"></audio>
+<audio id="boom" src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-firework-1683.wav"></audio>
 
 <script>
-const els = {
-  days: document.getElementById("days"),
-  hours: document.getElementById("hours"),
-  minutes: document.getElementById("minutes"),
-  seconds: document.getElementById("seconds"),
-  label: document.getElementById("targetLabel"),
-  date: document.getElementById("dateInput"),
-  time: document.getElementById("timeInput"),
-  tz: document.getElementById("timezoneSelect"),
-  settings: document.getElementById("settings")
+const d=d=document.getElementById("d"),
+      h=document.getElementById("h"),
+      m=document.getElementById("m"),
+      s=document.getElementById("s"),
+      secOnly=document.getElementById("secondsOnly");
+
+const tick=document.getElementById("tick");
+const boom=document.getElementById("boom");
+
+const nextYear=new Date().getFullYear()+1;
+const target=new Date(`${nextYear}-01-01T00:00:00`).getTime();
+
+let soundEnabled=false;
+
+/* Fullscreen + sound */
+start.onclick=()=>{
+  soundEnabled=true;
+  if(document.documentElement.requestFullscreen)
+    document.documentElement.requestFullscreen();
+  start.remove();
 };
 
-document.getElementById("openSettings").onclick = () => els.settings.showModal();
-document.getElementById("save").onclick = () => {
-  state.date = els.date.value;
-  state.time = els.time.value;
-  state.tz = els.tz.value;
-  els.settings.close();
-};
+function update(){
+  const diff=target-Date.now();
+  if(diff<=0){
+    secOnly.textContent="🎉";
+    boom.play();
+    return;
+  }
 
-/* Time zones */
-Intl.supportedValuesOf("timeZone").forEach(z => {
-  const o = document.createElement("option");
-  o.value = z;
-  o.textContent = z;
-  els.tz.appendChild(o);
-});
+  const totalSec=Math.floor(diff/1000);
+  const days=Math.floor(totalSec/86400);
+  const hours=Math.floor(totalSec/3600)%24;
+  const mins=Math.floor(totalSec/60)%60;
+  const secs=totalSec%60;
 
-/* State */
-let state = {
-  date: "2025-12-25",
-  time: "08:00",
-  tz: Intl.DateTimeFormat().resolvedOptions().timeZone
-};
+  d.textContent=days;
+  h.textContent=hours;
+  m.textContent=mins;
+  s.textContent=secs;
 
-els.date.value = state.date;
-els.time.value = state.time;
-els.tz.value = state.tz;
+  if(totalSec<=3600) document.body.classList.add("final-hour");
 
-/* Countdown */
-function toUTC(date,time,tz){
-  const local = new Date(`${date}T${time}:00`);
-  return new Date(local.toLocaleString("en-US",{timeZone:tz})).getTime();
+  if(totalSec<=60){
+    document.getElementById("countdown").style.display="none";
+    secOnly.style.display="block";
+    secOnly.textContent=secs;
+    if(soundEnabled) tick.play();
+  }
+
+  if(totalSec<=10) document.body.classList.add("final-10");
 }
 
-function updateCountdown(){
-  const now=Date.now();
-  const target=toUTC(state.date,state.time,state.tz);
-  const diff=target-now;
-  if(diff<=0) return;
+setInterval(update,1000);
+update();
 
-  const hoursLeft = diff/3600000;
-  document.body.classList.toggle("final12", hoursLeft<=12);
-  document.body.classList.toggle("final1", hoursLeft<=1);
+/* Fireworks */
+const c=document.getElementById("fx"),ctx=c.getContext("2d");
+let sparks=[];
+function resize(){c.width=innerWidth;c.height=innerHeight;}
+onresize=resize;resize();
 
-  els.days.textContent=Math.floor(diff/86400000);
-  els.hours.textContent=Math.floor(diff/3600000)%24;
-  els.minutes.textContent=Math.floor(diff/60000)%60;
-  els.seconds.textContent=Math.floor(diff/1000)%60;
-  els.label.textContent=`Counting down to ${state.date} at ${state.time}`;
+function boomFx(){
+  for(let i=0;i<50;i++){
+    sparks.push({
+      x:Math.random()*c.width,
+      y:Math.random()*c.height*.5,
+      vx:(Math.random()-.5)*7,
+      vy:(Math.random()-.5)*7,
+      life:80
+    });
+  }
 }
+setInterval(boomFx,1000);
 
-setInterval(updateCountdown,1000);
-updateCountdown();
-
-/* Snow animation */
-const canvas=document.getElementById("snow");
-const ctx=canvas.getContext("2d");
-let flakes=[];
-function resize(){canvas.width=innerWidth;canvas.height=innerHeight;}
-window.onresize=resize;
-resize();
-function makeFlake(){return{x:Math.random()*canvas.width,y:-10,r:Math.random()*3+1,s:Math.random()*1+0.5};}
-function snow(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(flakes.length<200) flakes.push(makeFlake());
-  flakes.forEach(f=>{f.y+=f.s;ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,0.8)";ctx.fill();});
-  flakes=flakes.filter(f=>f.y<canvas.height+10);
-  requestAnimationFrame(snow);
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  sparks.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.life--;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,2,0,Math.PI*2);
+    ctx.fillStyle="rgba(250,204,21,.8)";
+    ctx.fill();
+  });
+  sparks=sparks.filter(p=>p.life>0);
+  requestAnimationFrame(draw);
 }
-snow();
+draw();
 </script>
 
 </body>
