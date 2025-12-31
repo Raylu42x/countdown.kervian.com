@@ -56,7 +56,7 @@ h1{letter-spacing:.12em;margin-bottom:.5rem}
   margin-bottom:1rem;
 }
 
-input{
+input, select{
   padding:.6rem .9rem;
   border-radius:10px;
   border:none;
@@ -120,6 +120,34 @@ body.final-10 #secondsOnly{
 <div class="controls">
   <input type="date" id="date">
   <input type="time" id="time">
+  <select id="tz">
+    <option value="auto">Auto (Local)</option>
+    <option value="-12">UTC−12</option>
+    <option value="-11">UTC−11</option>
+    <option value="-10">UTC−10</option>
+    <option value="-9">UTC−9</option>
+    <option value="-8">UTC−8</option>
+    <option value="-7">UTC−7</option>
+    <option value="-6">UTC−6</option>
+    <option value="-5">UTC−5</option>
+    <option value="-4">UTC−4</option>
+    <option value="-3">UTC−3</option>
+    <option value="-2">UTC−2</option>
+    <option value="-1">UTC−1</option>
+    <option value="0">UTC</option>
+    <option value="1">UTC+1</option>
+    <option value="2">UTC+2</option>
+    <option value="3">UTC+3</option>
+    <option value="4">UTC+4</option>
+    <option value="5">UTC+5</option>
+    <option value="6">UTC+6</option>
+    <option value="7">UTC+7</option>
+    <option value="8">UTC+8</option>
+    <option value="9">UTC+9</option>
+    <option value="10">UTC+10</option>
+    <option value="11">UTC+11</option>
+    <option value="12">UTC+12</option>
+  </select>
 </div>
 
 <div id="countdown">
@@ -135,6 +163,7 @@ body.final-10 #secondsOnly{
 /* ---------- TARGET TIME ---------- */
 const dateInput=document.getElementById("date");
 const timeInput=document.getElementById("time");
+const tzSelect = document.getElementById("tz");
 
 /* default = next New Year */
 const now=new Date();
@@ -142,7 +171,18 @@ dateInput.value=`${now.getFullYear()+1}-01-01`;
 timeInput.value="00:00";
 
 function getTarget(){
-  return new Date(`${dateInput.value}T${timeInput.value}:00`).getTime();
+  if(!dateInput.value || !timeInput.value) return null;
+
+  const [y,m,d] = dateInput.value.split("-").map(Number);
+  const [hh,mm] = timeInput.value.split(":").map(Number);
+
+  if(tzSelect.value === "auto"){
+    return new Date(y, m-1, d, hh, mm, 0).getTime();
+  }
+
+  const tzOffset = Number(tzSelect.value);
+  const utc = Date.UTC(y, m-1, d, hh - tzOffset, mm, 0);
+  return utc;
 }
 
 /* ---------- COUNTDOWN ---------- */
@@ -154,9 +194,19 @@ const d=document.getElementById("d"),
       grid=document.getElementById("countdown");
 
 function update(){
-  const diff=getTarget()-Date.now();
+  const targetTime = getTarget();
+  if(targetTime===null) return;
+
+  const diff=targetTime-Date.now();
   if(diff<=0){
-    secOnly.textContent="DONE";
+    const targetDate = new Date(targetTime);
+    const isNewYear =
+      targetDate.getUTCMonth() === 0 &&
+      targetDate.getUTCDate() === 1 &&
+      targetDate.getUTCHours() === 0 &&
+      targetDate.getUTCMinutes() === 0;
+
+    secOnly.textContent = isNewYear ? "HAPPY NEW YEAR" : "DONE";
     bigFirework();
     return;
   }
@@ -182,6 +232,7 @@ function update(){
 
   if(t<=10) document.body.classList.add("final-10");
 }
+
 setInterval(update,1000);
 update();
 
