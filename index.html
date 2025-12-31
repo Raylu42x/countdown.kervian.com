@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>New Year Countdown</title>
+<meta name="viewport"
+  content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>Countdown</title>
 
 <style>
 :root{
@@ -14,9 +16,15 @@
 
 *{box-sizing:border-box;font-family:system-ui,sans-serif}
 
-body{
+html,body{
   margin:0;
-  min-height:100vh;
+  padding:0;
+  width:100%;
+  height:100%;
+}
+
+body{
+  min-height:100svh;
   background:radial-gradient(circle at top,#312e81,var(--bg));
   color:#fff;
   display:flex;
@@ -25,6 +33,11 @@ body{
   justify-content:center;
   text-align:center;
   overflow:hidden;
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
 }
 
 canvas{
@@ -33,46 +46,59 @@ canvas{
   pointer-events:none;
 }
 
-h1{letter-spacing:.12em}
+h1{letter-spacing:.12em;margin-bottom:.5rem}
+
+.controls{
+  display:flex;
+  gap:.5rem;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-bottom:1rem;
+}
+
+input,button{
+  padding:.6rem .9rem;
+  border-radius:10px;
+  border:none;
+  font-weight:700;
+}
+
+button{
+  background:var(--gold);
+  cursor:pointer;
+}
 
 #countdown{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:1.2rem;
-  margin-top:2rem;
+  gap:1rem;
+  margin-top:1.5rem;
 }
 
 .box{
   background:rgba(255,255,255,.08);
-  padding:1.3rem;
-  border-radius:18px;
+  padding:1.2rem;
+  border-radius:16px;
   backdrop-filter:blur(10px);
-  transition:.4s;
 }
 
 .box span{
-  font-size:3rem;
+  font-size:2.8rem;
   font-weight:900;
   color:var(--gold);
-  text-shadow:0 0 18px rgba(250,204,21,.7);
+  text-shadow:0 0 16px rgba(250,204,21,.7);
 }
 
-/* FINAL HOUR */
-body.final-hour{
-  background:radial-gradient(circle at top,#701a75,var(--bg));
-}
-body.final-hour .box{
-  box-shadow:0 0 30px rgba(250,204,21,.6);
-  transform:translateY(-4px);
-}
-
-/* FINAL SECONDS */
 #secondsOnly{
   display:none;
-  font-size:8rem;
+  font-size:7rem;
   font-weight:900;
   color:var(--hot);
   text-shadow:0 0 40px rgba(253,230,138,1);
+}
+
+body.final-hour .box{
+  box-shadow:0 0 30px rgba(250,204,21,.6);
 }
 
 body.final-10 #secondsOnly{
@@ -82,16 +108,6 @@ body.final-10 #secondsOnly{
 @keyframes pulse{
   0%,100%{transform:scale(1)}
   50%{transform:scale(1.15)}
-}
-
-button{
-  margin-top:2rem;
-  padding:.9rem 1.6rem;
-  border:none;
-  border-radius:14px;
-  background:var(--gold);
-  font-weight:900;
-  cursor:pointer;
 }
 
 @media(max-width:700px){
@@ -104,129 +120,144 @@ button{
 
 <canvas id="fx"></canvas>
 
-<h1>🎆 NEW YEAR COUNTDOWN 🎆</h1>
+<h1>🎆 COUNTDOWN 🎆</h1>
+
+<div class="controls">
+  <input type="date" id="date">
+  <input type="time" id="time">
+  <button id="soundBtn">🔊 Enable Sound</button>
+</div>
 
 <div id="countdown">
-  <div class="box"><span id="days">0</span><div>Days</div></div>
-  <div class="box"><span id="hours">0</span><div>Hours</div></div>
-  <div class="box"><span id="minutes">0</span><div>Minutes</div></div>
-  <div class="box"><span id="seconds">0</span><div>Seconds</div></div>
+  <div class="box"><span id="d">0</span><div>Days</div></div>
+  <div class="box"><span id="h">0</span><div>Hours</div></div>
+  <div class="box"><span id="m">0</span><div>Minutes</div></div>
+  <div class="box"><span id="s">0</span><div>Seconds</div></div>
 </div>
 
 <div id="secondsOnly">60</div>
 
-<button id="start">🔊 Enable Sound & Fullscreen</button>
-
-<audio id="tick" preload="auto">
-  <source src="https://assets.mixkit.co/sfx/preview/mixkit-click-clock-timer-1079.wav">
-</audio>
-<audio id="boom" preload="auto">
-  <source src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-firework-1683.wav">
-</audio>
-
 <script>
-const els={
-  d:document.getElementById("days"),
-  h:document.getElementById("hours"),
-  m:document.getElementById("minutes"),
-  s:document.getElementById("seconds"),
-  secOnly:document.getElementById("secondsOnly"),
-  countdown:document.getElementById("countdown"),
-  start:document.getElementById("start"),
-  tick:document.getElementById("tick"),
-  boom:document.getElementById("boom")
+/* ---------- TARGET TIME ---------- */
+const dateInput=document.getElementById("date");
+const timeInput=document.getElementById("time");
+
+/* default = next New Year */
+const now=new Date();
+dateInput.value=`${now.getFullYear()+1}-01-01`;
+timeInput.value="00:00";
+
+function getTarget(){
+  return new Date(`${dateInput.value}T${timeInput.value}:00`).getTime();
+}
+
+/* ---------- SOUND (NO FILES) ---------- */
+let audioCtx=null;
+function beep(freq=800,dur=0.1){
+  if(!audioCtx) return;
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.frequency.value=freq;
+  o.connect(g);
+  g.connect(audioCtx.destination);
+  o.start();
+  g.gain.exponentialRampToValueAtTime(
+    0.0001,audioCtx.currentTime+dur
+  );
+  o.stop(audioCtx.currentTime+dur);
+}
+
+soundBtn.onclick=()=>{
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  soundBtn.remove();
 };
 
-let soundEnabled=false;
-
-/* SAFELY calculate next New Year in LOCAL time */
-function getNextNewYear(){
-  const now=new Date();
-  const year=now.getFullYear()+1;
-  return new Date(year,0,1,0,0,0).getTime();
-}
-const target=getNextNewYear();
-
-/* Button: REQUIRED for mobile audio */
-els.start.addEventListener("click",()=>{
-  soundEnabled=true;
-
-  els.tick.play().catch(()=>{});
-  els.tick.pause();
-  els.tick.currentTime=0;
-
-  if(document.documentElement.requestFullscreen){
-    document.documentElement.requestFullscreen().catch(()=>{});
-  }
-  els.start.remove();
-});
+/* ---------- COUNTDOWN ---------- */
+const d=document.getElementById("d"),
+      h=document.getElementById("h"),
+      m=document.getElementById("m"),
+      s=document.getElementById("s"),
+      secOnly=document.getElementById("secondsOnly"),
+      grid=document.getElementById("countdown");
 
 function update(){
-  const diff=target-Date.now();
+  const diff=getTarget()-Date.now();
   if(diff<=0){
-    els.secOnly.textContent="🎉";
-    if(soundEnabled) els.boom.play();
+    secOnly.textContent="🎉";
+    bigFirework();
+    beep(300,0.5);
     return;
   }
 
-  const totalSec=Math.floor(diff/1000);
-  const days=Math.floor(totalSec/86400);
-  const hours=Math.floor(totalSec/3600)%24;
-  const mins=Math.floor(totalSec/60)%60;
-  const secs=totalSec%60;
+  const t=Math.floor(diff/1000);
+  const days=Math.floor(t/86400);
+  const hours=Math.floor(t/3600)%24;
+  const mins=Math.floor(t/60)%60;
+  const secs=t%60;
 
-  els.d.textContent=days;
-  els.h.textContent=hours;
-  els.m.textContent=mins;
-  els.s.textContent=secs;
+  d.textContent=days;
+  h.textContent=hours;
+  m.textContent=mins;
+  s.textContent=secs;
 
-  if(totalSec<=3600) document.body.classList.add("final-hour");
+  if(t<=3600) document.body.classList.add("final-hour");
 
-  if(totalSec<=60){
-    els.countdown.style.display="none";
-    els.secOnly.style.display="block";
-    els.secOnly.textContent=secs;
-    if(soundEnabled){
-      els.tick.currentTime=0;
-      els.tick.play();
-    }
+  if(t<=60){
+    grid.style.display="none";
+    secOnly.style.display="block";
+    secOnly.textContent=secs;
+    beep(1000,0.05);
   }
 
-  if(totalSec<=10) document.body.classList.add("final-10");
+  if(t<=10) document.body.classList.add("final-10");
 }
-
 setInterval(update,1000);
 update();
 
-/* FIREWORKS */
+/* ---------- FIREWORKS ---------- */
 const c=document.getElementById("fx"),ctx=c.getContext("2d");
-let sparks=[];
 function resize(){c.width=innerWidth;c.height=innerHeight}
 onresize=resize;resize();
 
-function explode(){
-  for(let i=0;i<60;i++){
-    sparks.push({
-      x:Math.random()*c.width,
-      y:Math.random()*c.height*.5,
-      vx:(Math.random()-.5)*8,
-      vy:(Math.random()-.5)*8,
-      life:80
+let particles=[];
+
+function firework(x,y){
+  for(let i=0;i<40;i++){
+    const a=Math.random()*Math.PI*2;
+    const v=Math.random()*4+2;
+    particles.push({
+      x,y,
+      vx:Math.cos(a)*v,
+      vy:Math.sin(a)*v,
+      life:60
     });
   }
 }
-setInterval(explode,900);
+
+function bigFirework(){
+  firework(c.width/2,c.height/3);
+}
+
+setInterval(()=>{
+  firework(
+    Math.random()*c.width,
+    Math.random()*c.height*0.4
+  );
+},1200);
 
 function draw(){
   ctx.clearRect(0,0,c.width,c.height);
-  sparks.forEach(p=>{
-    p.x+=p.vx;p.y+=p.vy;p.life--;
+  particles.forEach(p=>{
+    p.x+=p.vx;
+    p.y+=p.vy;
+    p.vy+=0.04;
+    p.life--;
     ctx.beginPath();
     ctx.arc(p.x,p.y,2,0,Math.PI*2);
-    ctx.fillStyle="rgba(250,204,21,.8)";
+    ctx.fillStyle=`rgba(250,204,21,${p.life/60})`;
     ctx.fill();
   });
-  sparks=sparks.filter(p=>p.life>0);
+  particles=particles.filter(p=>p.life>0);
   requestAnimationFrame(draw);
 }
 draw();
