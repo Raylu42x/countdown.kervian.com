@@ -56,16 +56,11 @@ h1{letter-spacing:.12em;margin-bottom:.5rem}
   margin-bottom:1rem;
 }
 
-input,button{
+input{
   padding:.6rem .9rem;
   border-radius:10px;
   border:none;
   font-weight:700;
-}
-
-button{
-  background:var(--gold);
-  cursor:pointer;
 }
 
 #countdown{
@@ -120,12 +115,11 @@ body.final-10 #secondsOnly{
 
 <canvas id="fx"></canvas>
 
-<h1>🎆 COUNTDOWN 🎆</h1>
+<h1>COUNTDOWN</h1>
 
 <div class="controls">
   <input type="date" id="date">
   <input type="time" id="time">
-  <button id="soundBtn">🔊 Enable Sound</button>
 </div>
 
 <div id="countdown">
@@ -151,27 +145,6 @@ function getTarget(){
   return new Date(`${dateInput.value}T${timeInput.value}:00`).getTime();
 }
 
-/* ---------- SOUND (NO FILES) ---------- */
-let audioCtx=null;
-function beep(freq=800,dur=0.1){
-  if(!audioCtx) return;
-  const o=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-  o.frequency.value=freq;
-  o.connect(g);
-  g.connect(audioCtx.destination);
-  o.start();
-  g.gain.exponentialRampToValueAtTime(
-    0.0001,audioCtx.currentTime+dur
-  );
-  o.stop(audioCtx.currentTime+dur);
-}
-
-soundBtn.onclick=()=>{
-  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  soundBtn.remove();
-};
-
 /* ---------- COUNTDOWN ---------- */
 const d=document.getElementById("d"),
       h=document.getElementById("h"),
@@ -183,9 +156,8 @@ const d=document.getElementById("d"),
 function update(){
   const diff=getTarget()-Date.now();
   if(diff<=0){
-    secOnly.textContent="🎉";
+    secOnly.textContent="DONE";
     bigFirework();
-    beep(300,0.5);
     return;
   }
 
@@ -206,7 +178,6 @@ function update(){
     grid.style.display="none";
     secOnly.style.display="block";
     secOnly.textContent=secs;
-    beep(1000,0.05);
   }
 
   if(t<=10) document.body.classList.add("final-10");
