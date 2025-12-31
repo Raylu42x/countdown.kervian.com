@@ -6,11 +6,10 @@
 <title>New Year Countdown</title>
 
 <style>
-:root {
-  --bg-dark:#020617;
-  --fg:#f8fafc;
+:root{
+  --bg:#020617;
   --gold:#facc15;
-  --gold-hot:#fde68a;
+  --hot:#fde68a;
 }
 
 *{box-sizing:border-box;font-family:system-ui,sans-serif}
@@ -18,14 +17,14 @@
 body{
   margin:0;
   min-height:100vh;
-  background:radial-gradient(circle at top,#312e81,var(--bg-dark));
-  color:var(--fg);
+  background:radial-gradient(circle at top,#312e81,var(--bg));
+  color:#fff;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  overflow:hidden;
   text-align:center;
+  overflow:hidden;
 }
 
 canvas{
@@ -34,9 +33,7 @@ canvas{
   pointer-events:none;
 }
 
-h1{
-  letter-spacing:.12em;
-}
+h1{letter-spacing:.12em}
 
 #countdown{
   display:grid;
@@ -50,7 +47,7 @@ h1{
   padding:1.3rem;
   border-radius:18px;
   backdrop-filter:blur(10px);
-  transition:.5s;
+  transition:.4s;
 }
 
 .box span{
@@ -62,23 +59,22 @@ h1{
 
 /* FINAL HOUR */
 body.final-hour{
-  background:radial-gradient(circle at top,#701a75,#020617);
+  background:radial-gradient(circle at top,#701a75,var(--bg));
 }
 body.final-hour .box{
   box-shadow:0 0 30px rgba(250,204,21,.6);
   transform:translateY(-4px);
 }
 
-/* FINAL MINUTE */
+/* FINAL SECONDS */
 #secondsOnly{
   display:none;
   font-size:8rem;
   font-weight:900;
-  color:var(--gold-hot);
+  color:var(--hot);
   text-shadow:0 0 40px rgba(253,230,138,1);
 }
 
-/* FINAL 10 */
 body.final-10 #secondsOnly{
   animation:pulse .6s infinite;
 }
@@ -98,11 +94,8 @@ button{
   cursor:pointer;
 }
 
-/* Mobile */
 @media(max-width:700px){
-  #countdown{
-    grid-template-columns:repeat(2,1fr);
-  }
+  #countdown{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
@@ -114,47 +107,65 @@ button{
 <h1>🎆 NEW YEAR COUNTDOWN 🎆</h1>
 
 <div id="countdown">
-  <div class="box"><span id="d">0</span><div>Days</div></div>
-  <div class="box"><span id="h">0</span><div>Hours</div></div>
-  <div class="box"><span id="m">0</span><div>Minutes</div></div>
-  <div class="box"><span id="s">0</span><div>Seconds</div></div>
+  <div class="box"><span id="days">0</span><div>Days</div></div>
+  <div class="box"><span id="hours">0</span><div>Hours</div></div>
+  <div class="box"><span id="minutes">0</span><div>Minutes</div></div>
+  <div class="box"><span id="seconds">0</span><div>Seconds</div></div>
 </div>
 
 <div id="secondsOnly">60</div>
 
-<button id="start">🔊 Enter Fullscreen & Enable Sound</button>
+<button id="start">🔊 Enable Sound & Fullscreen</button>
 
-<audio id="tick" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-mechanical-bling-210.wav"></audio>
-<audio id="boom" src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-firework-1683.wav"></audio>
+<audio id="tick" preload="auto">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-click-clock-timer-1079.wav">
+</audio>
+<audio id="boom" preload="auto">
+  <source src="https://assets.mixkit.co/sfx/preview/mixkit-explosion-firework-1683.wav">
+</audio>
 
 <script>
-const d=d=document.getElementById("d"),
-      h=document.getElementById("h"),
-      m=document.getElementById("m"),
-      s=document.getElementById("s"),
-      secOnly=document.getElementById("secondsOnly");
-
-const tick=document.getElementById("tick");
-const boom=document.getElementById("boom");
-
-const nextYear=new Date().getFullYear()+1;
-const target=new Date(`${nextYear}-01-01T00:00:00`).getTime();
+const els={
+  d:document.getElementById("days"),
+  h:document.getElementById("hours"),
+  m:document.getElementById("minutes"),
+  s:document.getElementById("seconds"),
+  secOnly:document.getElementById("secondsOnly"),
+  countdown:document.getElementById("countdown"),
+  start:document.getElementById("start"),
+  tick:document.getElementById("tick"),
+  boom:document.getElementById("boom")
+};
 
 let soundEnabled=false;
 
-/* Fullscreen + sound */
-start.onclick=()=>{
+/* SAFELY calculate next New Year in LOCAL time */
+function getNextNewYear(){
+  const now=new Date();
+  const year=now.getFullYear()+1;
+  return new Date(year,0,1,0,0,0).getTime();
+}
+const target=getNextNewYear();
+
+/* Button: REQUIRED for mobile audio */
+els.start.addEventListener("click",()=>{
   soundEnabled=true;
-  if(document.documentElement.requestFullscreen)
-    document.documentElement.requestFullscreen();
-  start.remove();
-};
+
+  els.tick.play().catch(()=>{});
+  els.tick.pause();
+  els.tick.currentTime=0;
+
+  if(document.documentElement.requestFullscreen){
+    document.documentElement.requestFullscreen().catch(()=>{});
+  }
+  els.start.remove();
+});
 
 function update(){
   const diff=target-Date.now();
   if(diff<=0){
-    secOnly.textContent="🎉";
-    boom.play();
+    els.secOnly.textContent="🎉";
+    if(soundEnabled) els.boom.play();
     return;
   }
 
@@ -164,18 +175,21 @@ function update(){
   const mins=Math.floor(totalSec/60)%60;
   const secs=totalSec%60;
 
-  d.textContent=days;
-  h.textContent=hours;
-  m.textContent=mins;
-  s.textContent=secs;
+  els.d.textContent=days;
+  els.h.textContent=hours;
+  els.m.textContent=mins;
+  els.s.textContent=secs;
 
   if(totalSec<=3600) document.body.classList.add("final-hour");
 
   if(totalSec<=60){
-    document.getElementById("countdown").style.display="none";
-    secOnly.style.display="block";
-    secOnly.textContent=secs;
-    if(soundEnabled) tick.play();
+    els.countdown.style.display="none";
+    els.secOnly.style.display="block";
+    els.secOnly.textContent=secs;
+    if(soundEnabled){
+      els.tick.currentTime=0;
+      els.tick.play();
+    }
   }
 
   if(totalSec<=10) document.body.classList.add("final-10");
@@ -184,24 +198,24 @@ function update(){
 setInterval(update,1000);
 update();
 
-/* Fireworks */
+/* FIREWORKS */
 const c=document.getElementById("fx"),ctx=c.getContext("2d");
 let sparks=[];
-function resize(){c.width=innerWidth;c.height=innerHeight;}
+function resize(){c.width=innerWidth;c.height=innerHeight}
 onresize=resize;resize();
 
-function boomFx(){
-  for(let i=0;i<50;i++){
+function explode(){
+  for(let i=0;i<60;i++){
     sparks.push({
       x:Math.random()*c.width,
       y:Math.random()*c.height*.5,
-      vx:(Math.random()-.5)*7,
-      vy:(Math.random()-.5)*7,
+      vx:(Math.random()-.5)*8,
+      vy:(Math.random()-.5)*8,
       life:80
     });
   }
 }
-setInterval(boomFx,1000);
+setInterval(explode,900);
 
 function draw(){
   ctx.clearRect(0,0,c.width,c.height);
