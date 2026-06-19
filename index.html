@@ -1,231 +1,915 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Countdown</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Countdown — Every moment, counted beautifully.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0b0033;
-  --gold: #facc15;
-  --hot: #fde68a;
-  --grey: #aaa;
-}
-
-* { box-sizing: border-box; font-family: system-ui, sans-serif; margin: 0; padding: 0; }
-
-html, body { width: 100%; height: 100%; }
-
-body {
-  min-height: 100svh;
-  background: radial-gradient(circle at top, #1a004d, var(--bg));
-  color: var(--grey);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  overflow: hidden;
-  padding:
-    env(safe-area-inset-top)
-    env(safe-area-inset-right)
-    env(safe-area-inset-bottom)
-    env(safe-area-inset-left);
-}
-
-canvas { position: fixed; inset: 0; pointer-events: none; }
-
-.controls {
-  position: fixed;
-  bottom: 10px;
-  opacity: 0.5;
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  transition: opacity 0.3s ease;
-}
-
-input, select {
-  padding: 0.5rem 0.8rem;
-  border-radius: 10px;
-  border: none;
-  font-weight: 700;
-  color: var(--grey);
-  background: rgba(255,255,255,0.08);
-}
-
-#countdown {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* always 3 columns for H:M:S */
-  gap: clamp(0.8rem, 2.2vw, 2.2rem);
-  width: 90vw;
-  max-width: 1800px;
-}
-
-.box {
-  background: rgba(255,255,255,0.05);
-  padding: clamp(1rem, 3vw, 2rem);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.box span {
-  font-size: clamp(4rem, 15vw, 12rem);
-  font-weight: 900;
-  color: var(--gold);
-  text-shadow: 0 0 16px rgba(250,204,21,0.7);
-  transition: transform 0.3s ease;
-}
-
-#secondsOnly {
-  display: none;
-  font-size: clamp(5rem, 30vw, 15rem);
-  font-weight: 900;
-  color: var(--hot);
-  text-shadow: 0 0 40px rgba(253,230,138,1);
-  transition: transform 0.3s ease;
-}
-
-body.final-60 #secondsOnly { animation: pulse 0.6s infinite; }
-
-@keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.15);} }
-
-@media(max-width:1200px){
-  .box span{font-size:clamp(3rem,20vw,10rem);}
-  #secondsOnly{font-size:clamp(4rem,25vw,12rem);}
-}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:#06060d;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+@keyframes cdpulse{0%,100%{transform:scale(1);}50%{transform:scale(1.1);}}
+@keyframes cdfade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@keyframes cdpanel{from{opacity:0;transform:translateX(24px);}to{opacity:1;transform:none;}}
+input[type=date],input[type=time],input[type=text]{color-scheme:dark;}
 </style>
 </head>
 <body>
-<canvas id="fx"></canvas>
-
-<div class="controls">
-  <input type="date" id="date">
-  <input type="time" id="time">
-  <select id="tz">
-    <option value="auto">Auto (Local)</option>
-    <option value="0">UTC</option>
-  </select>
-</div>
-
-<div id="countdown">
-  <div class="box"><span id="h">0</span><div>Hours</div></div>
-  <div class="box"><span id="m">0</span><div>Minutes</div></div>
-  <div class="box"><span id="s">0</span><div>Seconds</div></div>
-</div>
-
-<div id="secondsOnly">0</div>
-
+<div id="app" style="position:fixed;inset:0;overflow:hidden;background:#06060d;color:#ece9f5;font-family:'Space Grotesk',system-ui,sans-serif;"></div>
 <script>
-const dateInput=document.getElementById("date");
-const timeInput=document.getElementById("time");
-const tzSelect=document.getElementById("tz");
-const hEl=document.getElementById("h"),
-      mEl=document.getElementById("m"),
-      sEl=document.getElementById("s"),
-      secOnly=document.getElementById("secondsOnly"),
-      grid=document.getElementById("countdown"),
-      controls=document.querySelector(".controls");
+(function(){
+'use strict';
 
-const now=new Date();
-dateInput.value=`${now.getFullYear()+1}-01-01`;
-timeInput.value="00:00";
+/* ============ Constants ============ */
+const CFG = {
+  confetti:   {kind:'fall', shape:'rect',     rate:18, vy:[60,120], size:[5,11], sway:42, spin:6},
+  snow:       {kind:'fall', shape:'circle',   rate:13, vy:[28,66],  size:[2,6],  sway:24, spin:0},
+  leaves:     {kind:'fall', shape:'leaf',     rate:9,  vy:[40,84],  size:[8,16], sway:54, spin:4},
+  shamrocks:  {kind:'fall', shape:'shamrock', rate:7,  vy:[46,88],  size:[9,15], sway:48, spin:5},
+  petals:     {kind:'fall', shape:'petal',    rate:12, vy:[34,74],  size:[7,14], sway:58, spin:5},
+  rain:       {kind:'fall', shape:'rain',     rate:34, vy:[200,360],size:[8,18], sway:0,  spin:0},
+  sparkles:   {kind:'fall', shape:'sparkle4', rate:13, vy:[20,50],  size:[5,12], sway:34, spin:3},
+  emojis:     {kind:'fall', shape:'emoji',    rate:7,  vy:[40,92],  size:[12,22],sway:40, spin:1.4, life:[5,9]},
+  hearts:     {kind:'rise', shape:'heart',    rate:6,  vy:[42,82],  size:[10,22],sway:36, spin:1.1, life:[4,7]},
+  lanterns:   {kind:'rise', shape:'lantern',  rate:2.3,vy:[18,40],  size:[14,26],sway:13, spin:0.3, life:[8,15]},
+  embers:     {kind:'rise', shape:'ember',    rate:26, vy:[28,70],  size:[2,6],  sway:32, spin:0,   life:[2.4,5]},
+  balloons:   {kind:'rise', shape:'balloon',  rate:3,  vy:[20,46],  size:[14,26],sway:16, spin:0.15,life:[8,16]},
+  bubbles:    {kind:'rise', shape:'bubble',   rate:15, vy:[22,60],  size:[5,16], sway:28, spin:0,   life:[4,9]},
+  rockets:    {kind:'rise', shape:'rocket2',  rate:2.4,vy:[130,210],size:[10,18],sway:5,  spin:0,   life:[2,3.6]},
+  bats:       {kind:'cross',shape:'bat',      rate:1.1,vy:[0,0],    size:[12,22],sway:0,  spin:0},
+  butterflies:{kind:'cross',shape:'butterfly',rate:1.4,vy:[0,0],    size:[11,19],sway:0,  spin:0}
+};
+const EFFECTS = [
+  {id:'fireworks',label:'Fireworks'},{id:'confetti',label:'Confetti'},{id:'sparkles',label:'Sparkles'},
+  {id:'emojis',label:'Emojis'},{id:'balloons',label:'Balloons'},{id:'bubbles',label:'Bubbles'},
+  {id:'rockets',label:'Rockets'},{id:'hearts',label:'Hearts'},{id:'snow',label:'Snowfall'},
+  {id:'petals',label:'Petals'},{id:'rain',label:'Rain'},{id:'lanterns',label:'Sky Lanterns'},
+  {id:'embers',label:'Embers'},{id:'leaves',label:'Falling Leaves'},{id:'shamrocks',label:'Shamrocks'},
+  {id:'butterflies',label:'Butterflies'},{id:'stars',label:'Starlight'},{id:'bats',label:'Bats'}
+];
+const SWATCHES = ['#f5c542','#ffd166','#ff7a18','#ff5a5f','#ff3b30','#ff5d8f','#ff9eb5','#a855f7','#7c5cff','#5aa9ff','#4f86ff','#2dd4bf','#2ecc71','#7ed957','#06d6a0','#ffffff'];
+const DEFAULT_EMOJIS = ['🎉','✨','🎈','⭐','🥳','🎊','💫','🎇'];
+const CLEAN_EMOJIS = ['🎉','🎈','⭐','❤️','🎂','🎁','🌟','✨','🥳','🎊','🏆','🚀','🌈','🍀','☀️','🌸','🐶','🐱','🦄','🍩','🍕','⚽','🎵','💎','👑','🐰','🌊','🎯'];
+const CATS = {all:'All',religious:'Religious',cultural:'Cultural',national:'National',seasonal:'Seasonal',fun:'Fun'};
+const GRACE = 86400000;
 
-function getTarget(){
-  if(!dateInput.value || !timeInput.value) return null;
-  const [y,m,d]=dateInput.value.split("-").map(Number);
-  const [hh,mm]=timeInput.value.split(":").map(Number);
-  if(tzSelect.value==="auto") return new Date(y,m-1,d,hh,mm,0).getTime();
-  return Date.UTC(y,m-1,d,hh - Number(tzSelect.value), mm,0);
+const DATA = [
+  {id:'newyear',name:'New Year',cat:'cultural',greeting:'Happy New Year',rule:{type:'fixed',month:1,day:1},accent:'#f5c542',bg:['#1a0640','#06031a'],particles:['#facc15','#fde68a','#a78bfa','#f472b6','#22d3ee'],emojis:['🎉','🎊','🥳','🍾','✨','🎆'],backgrounds:[['fireworks','Fireworks'],['confetti','Confetti'],['emojis','Party Emojis'],['snow','Midnight Snow']]},
+  {id:'mlk',name:'MLK Day',cat:'national',greeting:'Honoring Dr. King',rule:{type:'nth',month:1,weekday:1,n:3},accent:'#ffd166',bg:['#10122a','#05060f'],particles:['#ffd166','#ffffff','#5aa9ff','#c9a227'],backgrounds:[['stars','Starlight'],['lanterns','Sky Lanterns'],['embers','Candlelight']]},
+  {id:'groundhog',name:'Groundhog Day',cat:'fun',greeting:'Six more weeks!',rule:{type:'fixed',month:2,day:2},accent:'#a86b3c',bg:['#1a130a','#0a0704'],particles:['#a86b3c','#ffffff','#d4a017','#cfe0ff'],backgrounds:[['snow','Snowfall'],['leaves','Leaves'],['stars','Dawn Sky']]},
+  {id:'valentines',name:"Valentine's Day",cat:'cultural',greeting:"Happy Valentine's Day",rule:{type:'fixed',month:2,day:14},accent:'#ff5d8f',bg:['#2a0717','#10030a'],particles:['#ff5d8f','#ff9eb5','#ff2d55','#ffd1dc'],emojis:['❤️','💕','🌹','💘','😍','💖'],backgrounds:[['hearts','Floating Hearts'],['petals','Rose Petals'],['emojis','Love Emojis'],['confetti','Confetti']]},
+  {id:'presidents',name:"Presidents' Day",cat:'national',greeting:"Happy Presidents' Day",rule:{type:'nth',month:2,weekday:1,n:3},accent:'#4f86ff',bg:['#0a1430','#04060f'],particles:['#4f86ff','#ffffff','#ff4d4d','#fbbf24'],backgrounds:[['stars','Starlight'],['fireworks','Fireworks'],['confetti','Confetti']]},
+  {id:'lunar',name:'Lunar New Year',cat:'cultural',greeting:'Happy Lunar New Year',rule:{type:'table',dates:['2024-02-10','2025-01-29','2026-02-17','2027-02-06','2028-01-26','2029-02-13','2030-02-03','2031-01-23','2032-02-11','2033-01-31','2034-02-19','2035-02-08','2036-01-28','2037-02-15','2038-02-04','2039-01-24','2040-02-12']},accent:'#ff3b30',bg:['#2a0608','#0e0203'],particles:['#ff3b30','#ffd60a','#ff7a45','#ffffff'],backgrounds:[['lanterns','Sky Lanterns'],['fireworks','Fireworks'],['confetti','Red & Gold']]},
+  {id:'ramadan',name:'Ramadan',cat:'religious',greeting:'Ramadan Mubarak',rule:{type:'table',time:'18:00',dates:['2024-03-11','2025-03-01','2026-02-18','2027-02-08','2028-01-28','2029-01-17','2030-01-06','2031-12-27','2032-12-15','2033-12-04','2034-11-24','2035-11-13','2036-11-01','2037-10-22','2038-10-11']},accent:'#ffd166',bg:['#06112a','#03060f'],particles:['#ffd166','#9bd2ff','#c9a227','#ffffff'],backgrounds:[['stars','Crescent Sky'],['lanterns','Sky Lanterns'],['embers','Lantern Glow']]},
+  {id:'holi',name:'Holi',cat:'religious',greeting:'Happy Holi',rule:{type:'table',dates:['2024-03-25','2025-03-14','2026-03-04','2027-03-22','2028-03-11','2029-03-01','2030-03-20','2031-03-09','2032-03-27','2033-03-16','2034-03-05','2035-03-24']},accent:'#f72585',bg:['#1a0a1f','#0a0410'],particles:['#f72585','#ffd166','#2ecc71','#5aa9ff','#ff7a18'],backgrounds:[['confetti','Color Powder'],['sparkles','Sparkles'],['petals','Petals']]},
+  {id:'pi',name:'Pi Day',cat:'fun',greeting:'Happy Pi Day',rule:{type:'fixed',month:3,day:14},accent:'#5aa9ff',bg:['#0a1430','#04060f'],particles:['#5aa9ff','#ffffff','#9bd2ff','#facc15'],backgrounds:[['sparkles','Sparkles'],['bubbles','Bubbles'],['confetti','Confetti']]},
+  {id:'stpatrick',name:"St. Patrick's Day",cat:'cultural',greeting:"Happy St. Patrick's Day",rule:{type:'fixed',month:3,day:17},accent:'#2ecc71',bg:['#06200f','#020c06'],particles:['#2ecc71','#ffd60a','#27ae60','#a3e635'],backgrounds:[['shamrocks','Shamrocks'],['confetti','Green Confetti'],['embers','Golden Glow']]},
+  {id:'springequinox',name:'Spring Equinox',cat:'seasonal',greeting:'Happy Spring',rule:{type:'fixed',month:3,day:20},accent:'#7ed957',bg:['#0e2014','#040a07'],particles:['#7ed957','#f78fb3','#fbe7a1','#a0e7e5'],backgrounds:[['petals','Petals'],['butterflies','Butterflies'],['bubbles','Bubbles']]},
+  {id:'easter',name:'Easter',cat:'religious',greeting:'Happy Easter',rule:{type:'easter'},accent:'#f78fb3',bg:['#1a1230','#0a0718'],particles:['#f78fb3','#a0e7e5','#fbe7a1','#b8a4e8'],backgrounds:[['petals','Spring Petals'],['butterflies','Butterflies'],['confetti','Pastel Confetti']]},
+  {id:'aprilfools',name:"April Fools' Day",cat:'fun',greeting:'Gotcha!',rule:{type:'fixed',month:4,day:1},accent:'#ff7a18',bg:['#241038','#0c0418'],particles:['#ff7a18','#2ecc71','#5aa9ff','#ff5d8f'],backgrounds:[['confetti','Confetti'],['bubbles','Bubbles'],['balloons','Balloons']]},
+  {id:'earthday',name:'Earth Day',cat:'seasonal',greeting:'Happy Earth Day',rule:{type:'fixed',month:4,day:22},accent:'#2ecc71',bg:['#06200f','#020c06'],particles:['#2ecc71','#5aa9ff','#7ed957','#a0e7e5'],backgrounds:[['petals','Petals'],['leaves','Leaves'],['butterflies','Butterflies']]},
+  {id:'passover',name:'Passover',cat:'religious',greeting:'Chag Pesach Sameach',rule:{type:'table',time:'18:00',dates:['2025-04-12','2026-04-01','2027-04-21','2028-04-10','2029-03-30','2030-04-17','2031-04-07','2032-03-26','2033-04-13','2034-04-03','2035-04-23']},accent:'#5aa9ff',bg:['#0a1430','#04060f'],particles:['#5aa9ff','#ffffff','#ffd166','#9bd2ff'],backgrounds:[['stars','Starlight'],['embers','Candlelight'],['sparkles','Sparkles']]},
+  {id:'starwars',name:'Star Wars Day',cat:'fun',greeting:'May the 4th be with you',rule:{type:'fixed',month:5,day:4},accent:'#facc15',bg:['#05060f','#020308'],particles:['#facc15','#ffffff','#5aa9ff','#ff3b30'],backgrounds:[['rockets','Rockets'],['stars','Star Field'],['sparkles','Sparks']]},
+  {id:'cincodemayo',name:'Cinco de Mayo',cat:'cultural',greeting:'¡Feliz Cinco de Mayo!',rule:{type:'fixed',month:5,day:5},accent:'#2ecc71',bg:['#10210f','#060c06'],particles:['#2ecc71','#ff5da2','#ffd166','#ff3b30'],backgrounds:[['confetti','Confetti'],['fireworks','Fireworks'],['petals','Petals']]},
+  {id:'vesak',name:'Vesak',cat:'religious',greeting:'Happy Vesak',rule:{type:'table',dates:['2024-05-23','2025-05-12','2026-05-31','2027-05-20','2028-05-09','2029-05-27','2030-05-16','2031-05-06','2032-05-24','2033-05-14','2034-05-03','2035-05-22']},accent:'#ffd166',bg:['#1a1305','#0a0702'],particles:['#ffd166','#ff7a18','#f78fb3','#ffffff'],backgrounds:[['lanterns','Sky Lanterns'],['petals','Lotus Petals'],['stars','Starlight']]},
+  {id:'mothers',name:"Mother's Day",cat:'cultural',greeting:"Happy Mother's Day",rule:{type:'nth',month:5,weekday:0,n:2},accent:'#ff9eb5',bg:['#2a0717','#10030a'],particles:['#ff9eb5','#ff5d8f','#fbe7a1','#f78fb3'],backgrounds:[['hearts','Hearts'],['petals','Petals'],['butterflies','Butterflies']]},
+  {id:'memorial',name:'Memorial Day',cat:'national',greeting:'Memorial Day',rule:{type:'nthLast',month:5,weekday:1},accent:'#ff5a5f',bg:['#0c1838','#05060f'],particles:['#ff4d4d','#ffffff','#4f86ff','#fbbf24'],backgrounds:[['fireworks','Fireworks'],['stars','Night Sky'],['confetti','Red White & Blue']]},
+  {id:'eidadha',name:'Eid al-Adha',cat:'religious',greeting:'Eid Mubarak',rule:{type:'table',dates:['2024-06-16','2025-06-06','2026-05-26','2027-05-16','2028-05-04','2029-04-23','2030-04-13','2031-04-02','2032-03-22','2033-03-11','2034-03-01','2035-02-18']},accent:'#2dd4bf',bg:['#04201c','#020c0a'],particles:['#2dd4bf','#ffd166','#34d399','#ffffff'],backgrounds:[['lanterns','Sky Lanterns'],['stars','Crescent Sky'],['embers','Lantern Glow']]},
+  {id:'fathers',name:"Father's Day",cat:'cultural',greeting:"Happy Father's Day",rule:{type:'nth',month:6,weekday:0,n:3},accent:'#5aa9ff',bg:['#0a1430','#04060f'],particles:['#5aa9ff','#ffffff','#ffd166','#4f86ff'],backgrounds:[['confetti','Confetti'],['stars','Starlight'],['embers','Warmth']]},
+  {id:'juneteenth',name:'Juneteenth',cat:'national',greeting:'Happy Juneteenth',rule:{type:'fixed',month:6,day:19},accent:'#ff3b30',bg:['#23060a','#0c0204'],particles:['#ff3b30','#ffd166','#2ecc71','#ffffff'],backgrounds:[['fireworks','Fireworks'],['confetti','Confetti'],['stars','Freedom Sky']]},
+  {id:'summersolstice',name:'Summer Solstice',cat:'seasonal',greeting:'Happy Summer',rule:{type:'fixed',month:6,day:20},accent:'#ffd166',bg:['#241805','#0e0902'],particles:['#ffd166','#ff7a18','#ffffff','#facc15'],backgrounds:[['sparkles','Sunlight'],['bubbles','Bubbles'],['embers','Warmth']]},
+  {id:'pride',name:'Pride Day',cat:'cultural',greeting:'Happy Pride',rule:{type:'fixed',month:6,day:28},accent:'#ff5da2',bg:['#1a0a24','#0a0410'],particles:['#ff3b30','#ff7a18','#facc15','#2ecc71','#5aa9ff','#a855f7'],backgrounds:[['confetti','Rainbow Confetti'],['balloons','Balloons'],['hearts','Hearts']]},
+  {id:'independence',name:'Independence Day',cat:'national',greeting:'Happy 4th of July',rule:{type:'fixed',month:7,day:4},accent:'#ff5a5f',bg:['#0c1838','#05060f'],particles:['#ff4d4d','#ffffff','#4f86ff','#fbbf24'],backgrounds:[['fireworks','Fireworks'],['confetti','Red White & Blue'],['stars','Night Sky']]},
+  {id:'emoji',name:'World Emoji Day',cat:'fun',greeting:'Happy Emoji Day',rule:{type:'fixed',month:7,day:17},accent:'#facc15',bg:['#241c05','#0e0a02'],particles:['#facc15','#ff5d8f','#5aa9ff','#2ecc71'],emojis:['😀','😂','😍','🥳','🤩','😎','🥰','🤪','🤣','😜'],backgrounds:[['emojis','Emojis'],['confetti','Confetti'],['bubbles','Bubbles']]},
+  {id:'labor',name:'Labor Day',cat:'national',greeting:'Happy Labor Day',rule:{type:'nth',month:9,weekday:1,n:1},accent:'#ff5a5f',bg:['#0c1838','#05060f'],particles:['#ff4d4d','#ffffff','#4f86ff','#fbbf24'],backgrounds:[['fireworks','Fireworks'],['confetti','Confetti'],['stars','Night Sky']]},
+  {id:'roshhashanah',name:'Rosh Hashanah',cat:'religious',greeting:'Shana Tova',rule:{type:'table',time:'18:00',dates:['2024-10-02','2025-09-22','2026-09-11','2027-10-01','2028-09-20','2029-09-09','2030-09-27','2031-09-17','2032-09-05','2033-09-23','2034-09-13','2035-10-03']},accent:'#ffb703',bg:['#1a1305','#0a0702'],particles:['#ffb703','#ff7a18','#ffffff','#facc15'],backgrounds:[['stars','Starlight'],['embers','Candlelight'],['sparkles','Sparkles']]},
+  {id:'mooncake',name:'Mid-Autumn Festival',cat:'cultural',greeting:'Happy Mid-Autumn',rule:{type:'table',dates:['2024-09-17','2025-10-06','2026-09-25','2027-09-15','2028-10-03','2029-09-22','2030-09-12','2031-10-01','2032-09-19','2033-09-08','2034-09-27','2035-09-16']},accent:'#ffd166',bg:['#1a1305','#0a0702'],particles:['#ffd166','#ff7a18','#ffffff','#c9a227'],backgrounds:[['lanterns','Sky Lanterns'],['stars','Full Moon'],['embers','Lantern Glow']]},
+  {id:'pirate',name:'Talk Like a Pirate Day',cat:'fun',greeting:'Ahoy, matey!',rule:{type:'fixed',month:9,day:19},accent:'#ffd166',bg:['#06121f','#020609'],particles:['#ffd166','#9bd2ff','#ffffff','#2dd4bf'],backgrounds:[['bubbles','Bubbles'],['stars','Night Seas'],['confetti','Doubloons']]},
+  {id:'yomkippur',name:'Yom Kippur',cat:'religious',greeting:"G'mar Chatima Tova",rule:{type:'table',time:'18:00',dates:['2024-10-11','2025-10-01','2026-09-20','2027-10-10','2028-09-29','2029-09-18','2030-10-06','2031-09-26','2032-09-14','2033-10-02','2034-09-22','2035-10-12']},accent:'#9bd2ff',bg:['#06122e','#03060f'],particles:['#9bd2ff','#ffffff','#5aa9ff','#cfe0ff'],backgrounds:[['stars','Starlight'],['embers','Candlelight'],['snow','Stillness']]},
+  {id:'fallequinox',name:'Autumn Equinox',cat:'seasonal',greeting:'Happy Autumn',rule:{type:'fixed',month:9,day:22},accent:'#e07a2f',bg:['#1f1206','#0c0703'],particles:['#e07a2f','#c0392b','#d4a017','#a86b3c'],backgrounds:[['leaves','Falling Leaves'],['embers','Hearth'],['stars','Autumn Sky']]},
+  {id:'diwali',name:'Diwali',cat:'religious',greeting:'Happy Diwali',rule:{type:'table',dates:['2024-11-01','2025-10-21','2026-11-08','2027-10-29','2028-10-17','2029-11-05','2030-10-26','2031-11-14','2032-11-02','2033-10-22','2034-11-10','2035-10-30','2036-11-17','2037-11-07','2038-10-27','2039-11-15','2040-11-04']},accent:'#ffb703',bg:['#241405','#0e0702'],particles:['#ffb703','#ff6b6b','#f72585','#ffd60a'],backgrounds:[['embers','Diya Glow'],['fireworks','Fireworks'],['lanterns','Sky Lanterns']]},
+  {id:'halloween',name:'Halloween',cat:'cultural',greeting:'Happy Halloween',rule:{type:'fixed',month:10,day:31},accent:'#ff7a18',bg:['#1c0f2e','#0a0512'],particles:['#ff7a18','#a855f7','#facc15','#22c55e'],emojis:['🎃','👻','🦇','🕷️','🍬','💀'],backgrounds:[['embers','Embers'],['bats','Bats'],['emojis','Spooky Emojis'],['confetti','Spooky Confetti']]},
+  {id:'muertos',name:'Día de los Muertos',cat:'cultural',greeting:'Feliz Día de los Muertos',rule:{type:'fixed',month:11,day:1},accent:'#ff5da2',bg:['#1a0a24','#0c0414'],particles:['#ff5da2','#ffb703','#8b5cf6','#06d6a0'],backgrounds:[['petals','Marigold Petals'],['embers','Candlelight'],['stars','Starlight']]},
+  {id:'veterans',name:'Veterans Day',cat:'national',greeting:'Honoring our Veterans',rule:{type:'fixed',month:11,day:11},accent:'#4f86ff',bg:['#0a1430','#04060f'],particles:['#4f86ff','#ffffff','#ff4d4d','#fbbf24'],backgrounds:[['stars','Starlight'],['fireworks','Fireworks'],['confetti','Confetti']]},
+  {id:'thanksgiving',name:'Thanksgiving',cat:'national',greeting:'Happy Thanksgiving',rule:{type:'nth',month:11,weekday:4,n:4},accent:'#e07a2f',bg:['#1f1206','#0c0703'],particles:['#e07a2f','#c0392b','#d4a017','#a86b3c'],backgrounds:[['leaves','Falling Leaves'],['embers','Hearth'],['stars','Autumn Sky']]},
+  {id:'hanukkah',name:'Hanukkah',cat:'religious',greeting:'Happy Hanukkah',rule:{type:'table',time:'18:00',dates:['2024-12-25','2025-12-14','2026-12-04','2027-12-24','2028-12-12','2029-12-01','2030-12-20','2031-12-09','2032-11-27','2033-12-16','2034-12-06','2035-12-25','2036-12-13','2037-12-02','2038-12-21','2039-12-11','2040-11-29']},accent:'#5aa9ff',bg:['#06122e','#03060f'],particles:['#9bd2ff','#ffffff','#ffd166','#5aa9ff'],backgrounds:[['snow','Snowfall'],['stars','Starlight'],['embers','Candlelight']]},
+  {id:'wintersolstice',name:'Winter Solstice',cat:'seasonal',greeting:'Happy Winter',rule:{type:'fixed',month:12,day:21},accent:'#5aa9ff',bg:['#06122e','#03060f'],particles:['#9bd2ff','#ffffff','#5aa9ff','#cfe0ff'],backgrounds:[['snow','Snowfall'],['stars','Longest Night'],['embers','Candlelight']]},
+  {id:'christmas',name:'Christmas',cat:'religious',greeting:'Merry Christmas',rule:{type:'fixed',month:12,day:25},accent:'#e23b3b',bg:['#0a1f14','#040a07'],particles:['#e23b3b','#2ecc71','#ffd166','#ffffff'],emojis:['🎄','🎅','❄️','🎁','⛄','🔔'],backgrounds:[['snow','Snowfall'],['emojis','Festive Emojis'],['confetti','Twinkle Lights'],['embers','Cozy Glow']]},
+  {id:'eid',name:'Eid al-Fitr',cat:'religious',greeting:'Eid Mubarak',rule:{type:'table',dates:['2024-04-10','2025-03-31','2026-03-20','2027-03-10','2028-02-27','2029-02-15','2030-02-05','2031-01-25','2032-01-15','2033-01-03','2034-12-14','2035-12-03','2036-11-22','2037-11-11','2038-10-31']},accent:'#2dd4bf',bg:['#04201c','#020c0a'],particles:['#2dd4bf','#ffd166','#34d399','#ffffff'],backgrounds:[['lanterns','Sky Lanterns'],['stars','Crescent Sky'],['embers','Lantern Glow']]},
+  {id:'mardigras',name:'Mardi Gras',cat:'cultural',greeting:'Happy Mardi Gras',rule:{type:'easterOffset',off:-47},accent:'#a855f7',bg:['#1a0a24','#0a0410'],particles:['#a855f7','#2ecc71','#ffd166','#ff5da2'],backgrounds:[['confetti','Confetti'],['balloons','Balloons'],['sparkles','Sparkles']]}
+];
+
+/* ============ State ============ */
+function defaultDate(){ const d=new Date(Date.now()+30*864e5); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+const st = {
+  view:'home', filter:'all', holidayId:null, bg:0,
+  optionsOpen:false, isCustom:false, tick:0, copied:false, done:false,
+  winW:window.innerWidth, winH:window.innerHeight, size:0.5, speed:0.42,
+  custom:{
+    title:'My Countdown', dateISO:defaultDate(), time:'00:00',
+    accent:'#f5c542', effect:'confetti', message:'',
+    emojiList:['🎉','🥳','✨'], emojiDir:'fall'
+  }
+};
+
+// Canvas refs (module-level, not state)
+let timerCanvas = null;
+let cardCanvases = {};
+let optCanvases = {};
+let tsurf = null, msurf = null, optSurf = {}, optMetaArr = [];
+let hoverId = null;
+let copyTimer = null;
+
+/* ============ Utils ============ */
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s){ return escHtml(s); }
+function rnd(a,b){ return a+Math.random()*(b-a); }
+function pick(a){ return a[(Math.random()*a.length)|0]; }
+function lighten(hex,amt){ const n=parseInt(hex.slice(1),16); let r=(n>>16)+amt,g=((n>>8)&255)+amt,b=(n&255)+amt; r=Math.min(255,r);g=Math.min(255,g);b=Math.min(255,b); return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0'); }
+function byId(id){ return DATA.find(h=>h.id===id); }
+function fmtDate(d){ return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}); }
+function fmtShort(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+function rowStyle(active, acc){ return `display:flex;align-items:center;gap:12px;width:100%;padding:10px 11px;border-radius:13px;cursor:pointer;transition:all .2s;background:${active?'rgba(255,255,255,.09)':'rgba(255,255,255,.03)'};border:1px solid ${active?acc+'80':'rgba(255,255,255,.08)'};`; }
+function dotStyle(active, acc){ return `width:9px;height:9px;border-radius:50%;flex:none;background:${active?acc:'transparent'};box-shadow:${active?'0 0 10px '+acc:'inset 0 0 0 1.5px rgba(255,255,255,.25)'};`; }
+
+/* ============ Date engine ============ */
+function easter(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),month=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1; return {month,day}; }
+function nthWeekday(y,month,weekday,n,t){ const first=new Date(y,month-1,1); const shift=(weekday-first.getDay()+7)%7; return new Date(y,month-1,1+shift+(n-1)*7,t[0],t[1],0); }
+function lastWeekday(y,month,weekday,t){ const last=new Date(y,month,0); const shift=(last.getDay()-weekday+7)%7; return new Date(y,month-1,last.getDate()-shift,t[0],t[1],0); }
+function tableYear(dates,y,t){
+  const mk=(s)=>{ const a=s.split('-').map(Number); return new Date(a[0],a[1]-1,a[2],t[0],t[1],0); };
+  const exact=dates.find(s=>+s.slice(0,4)===y); if(exact) return mk(exact);
+  const first=mk(dates[0]),last=mk(dates[dates.length-1]);
+  const fy=+dates[0].slice(0,4),ly=+dates[dates.length-1].slice(0,4);
+  const per=(last.getTime()-first.getTime())/(ly-fy);
+  const anchor=y>ly?last:first, ay=y>ly?ly:fy;
+  return new Date(anchor.getTime()+(y-ay)*per);
+}
+function occYear(h,y){
+  const r=h.rule,t=(r.time||'00:00').split(':').map(Number);
+  if(r.type==='fixed') return new Date(y,r.month-1,r.day,t[0],t[1],0);
+  if(r.type==='nth') return nthWeekday(y,r.month,r.weekday,r.n,t);
+  if(r.type==='nthLast') return lastWeekday(y,r.month,r.weekday,t);
+  if(r.type==='easter'){ const e=easter(y); return new Date(y,e.month-1,e.day,t[0],t[1],0); }
+  if(r.type==='easterOffset'){ const e=easter(y); const dd=new Date(y,e.month-1,e.day,t[0],t[1],0); dd.setDate(dd.getDate()+r.off); return dd; }
+  if(r.type==='table') return tableYear(r.dates,y,t);
+  return new Date(y,0,1);
+}
+function resolveMs(h){
+  try{
+    const now=Date.now(),yn=new Date().getFullYear();
+    for(let y=yn-1;y<=yn+2;y++){ const occ=occYear(h,y); if(occ && now < occ.getTime()+GRACE) return occ.getTime(); }
+    const f=occYear(h,yn+1); return f?f.getTime():now+GRACE;
+  }catch(e){ return Date.now()+GRACE; }
+}
+function daysToMs(ms){ return Math.max(0, Math.ceil((ms-Date.now())/864e5)); }
+
+function targetMs(){
+  if(st.isCustom){
+    const c=st.custom;
+    const parts=(c.dateISO||'').split('-').map(Number);
+    const y=parts[0],m=parts[1],d=parts[2];
+    const tp=(c.time||'00:00').split(':').map(Number);
+    if(!y) return Date.now();
+    return new Date(y,m-1,d,tp[0]||0,tp[1]||0,0).getTime();
+  }
+  const h=byId(st.holidayId); if(!h) return Date.now();
+  return resolveMs(h);
+}
+function remaining(){ return Math.max(0, Math.floor((targetMs()-Date.now())/1000)); }
+
+function getEmojiSet(){ if(st.isCustom){ const e=st.custom.emojiList; return (e&&e.length)?e:DEFAULT_EMOJIS; } const h=byId(st.holidayId); return (h&&h.emojis)||DEFAULT_EMOJIS; }
+function timerEffect(){ if(st.isCustom) return st.custom.effect; const h=byId(st.holidayId); return h ? h.backgrounds[st.bg%h.backgrounds.length][0] : 'stars'; }
+function timerPalette(){ if(st.isCustom){ const a=st.custom.accent; return [a, lighten(a,40), '#ffffff', lighten(a,80)]; } const h=byId(st.holidayId); return h ? h.particles : ['#ffffff']; }
+function activeData(){
+  if(st.isCustom){
+    const c=st.custom; const d=new Date(targetMs());
+    return { name:c.title||'My Countdown', greeting:(c.message&&c.message.trim())?c.message:(c.title||'It’s time'), accent:c.accent, bg:['#10122a','#05060f'], dateLabel:fmtDate(d) };
+  }
+  const h=byId(st.holidayId) || DATA[0];
+  return { name:h.name, greeting:h.greeting, accent:h.accent, bg:h.bg, dateLabel:fmtDate(new Date(resolveMs(h))) };
 }
 
-let finished=false;
-function update(){
-  const target=getTarget();
-  if(!target) return;
-  let diff=Math.max(0, Math.floor((target-Date.now())/1000));
-  const h=Math.floor(diff/3600);
-  const m=Math.floor(diff/60)%60;
-  const s=diff%60;
-
-  hEl.textContent=h;
-  mEl.textContent=m;
-  sEl.textContent=s;
-
-  if(diff<=60 && !finished){
-    grid.style.display="none";
-    controls.style.opacity=0.5;
-    secOnly.style.display="block";
-    secOnly.textContent=s;
-    document.body.classList.add("final-60");
-  }
-
-  if(diff===0 && !finished){
-    finished=true;
-    secOnly.textContent="HAPPY NEW YEAR";
-    // hide everything else
-    grid.style.display="none";
-    controls.style.opacity=0;
-    // hide message after 5 seconds
-    setTimeout(()=>{secOnly.style.display="none";},5000);
-    bigFirework();
-  }
+/* ============ Hash / nav ============ */
+function syncHash(){
+  if(st.view!=='timer'){ history.replaceState(null,'',location.pathname); return; }
+  let h;
+  if(st.isCustom){ const c=st.custom; h='#v=timer&c='+encodeURIComponent(JSON.stringify({t:c.title,d:c.dateISO,tm:c.time,a:c.accent,e:c.effect,s:st.size,sp:st.speed,msg:c.message,el:c.emojiList,ed:c.emojiDir})); }
+  else { h='#v=timer&h='+st.holidayId+'&bg='+st.bg+'&sz='+st.size+'&sp='+st.speed; }
+  history.replaceState(null,'',location.pathname+h);
 }
-setInterval(update,1000);
-update();
-
-// ---------- FIREWORKS ----------
-const c=document.getElementById("fx"),ctx=c.getContext("2d");
-let particles=[];
-let colors=["#facc15","#fde68a","#ff4d4d","#4dff4d","#4d4dff","#ff4dff"];
-
-function resize(){c.width=innerWidth;c.height=innerHeight;}
-onresize=resize;resize();
-
-function firework(x,y,color){
-  for(let i=0;i<40;i++){
-    const a=Math.random()*Math.PI*2;
-    const v=Math.random()*2+1; // slow initial speed
-    particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:60,color: color||colors[Math.floor(Math.random()*colors.length)]});
-  }
+function parseHash(){
+  try{
+    const p=new URLSearchParams(location.hash.replace(/^#/,''));
+    if(p.get('v')!=='timer') return;
+    if(p.get('c')){
+      const c=JSON.parse(decodeURIComponent(p.get('c')));
+      st.view='timer'; st.isCustom=true; st.optionsOpen=false;
+      st.size=(c.s==null?0.5:c.s); st.speed=(c.sp==null?0.42:c.sp);
+      st.custom={title:c.t||'My Countdown',dateISO:c.d||defaultDate(),time:c.tm||'00:00',accent:c.a||'#f5c542',effect:c.e||'confetti',message:c.msg||'',emojiList:(c.el&&c.el.length)?c.el:['🎉','🥳','✨'],emojiDir:c.ed||'fall'};
+    } else if(p.get('h') && byId(p.get('h'))){
+      st.view='timer'; st.isCustom=false; st.holidayId=p.get('h');
+      st.bg=parseInt(p.get('bg')||'0',10);
+      st.size=(parseFloat(p.get('sz'))||0.5);
+      st.speed=(p.get('sp')==null?0.42:parseFloat(p.get('sp')));
+    }
+  }catch(e){}
 }
 
-function bigFirework(){
-  for(let i=0;i<5;i++){
-    firework(c.width/2 + (i*20-40), c.height/3 + (i*10-20));
-  }
+/* ============ HTML generators ============ */
+function homeFullHTML(){
+  const counts={all:DATA.length};
+  for(const k of ['religious','cultural','national','seasonal','fun']) counts[k]=DATA.filter(h=>h.cat===k).length;
+  const filters=Object.keys(CATS).map(k=>{
+    const active=st.filter===k;
+    const chipStyle="font:600 13px/1 'Space Grotesk';letter-spacing:.02em;padding:10px 16px;border-radius:999px;cursor:pointer;transition:all .25s;"+(active
+      ? 'color:#0a0820;background:#ece9f5;border:1px solid #ece9f5;'
+      : 'color:rgba(255,255,255,.74);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);');
+    return `<button data-filter="${k}" style="${chipStyle}">${escHtml(CATS[k])}<span style="opacity:.5;margin-left:7px;font-weight:500;">${counts[k]}</span></button>`;
+  }).join('');
+
+  return `
+    <div style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -10%,#171034 0%,#0a0820 45%,#06060d 100%);">
+      <div style="max-width:1500px;margin:0 auto;padding:clamp(14px,2.5vw,28px) clamp(18px,4vw,56px) 80px;">
+        <header style="display:flex;align-items:center;justify-content:flex-end;gap:18px;flex-wrap:wrap;">
+          <button id="about-btn" style="font:600 13px/1 'Space Grotesk';letter-spacing:.02em;color:rgba(255,255,255,.7);background:none;border:none;cursor:pointer;padding:8px 4px;">About</button>
+          <button id="create-btn" style="display:flex;align-items:center;gap:8px;font:600 13px/1 'Space Grotesk';letter-spacing:.02em;color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:11px 18px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px -8px rgba(245,197,66,.6);">Create your own <span style="font-size:15px;">↗</span></button>
+        </header>
+        <div style="margin:clamp(2px,0.6vw,8px) 0 clamp(18px,3vw,34px);max-width:760px;animation:cdfade .6s both;">
+          <h1 style="font:400 clamp(40px,7.4vw,92px)/0.98 'Instrument Serif';letter-spacing:-.01em;color:#fff;margin:0;">Every moment,<br><span style="font-style:italic;color:#f5c542;">counted</span> beautifully.</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:clamp(20px,3vw,32px);">${filters}</div>
+        <div id="home-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(230px,100%),1fr));gap:clamp(13px,1.5vw,24px);">${gridHTML()}</div>
+      </div>
+    </div>`;
 }
 
-// slow initial fireworks, more as countdown approaches zero
-setInterval(()=>{
-  let target=getTarget();
-  let t=target?Math.max(0,Math.floor((target-Date.now())/1000)):60;
-  let count=1;
-  if(t<=60) count=5;
-  else if(t<=600) count=3;
-  for(let i=0;i<count;i++){
-    firework(Math.random()*c.width, Math.random()*c.height*0.5);
-  }
-},1200);
+function gridHTML(){
+  const list=DATA.filter(h=>st.filter==='all'||h.cat===st.filter).map(h=>({h,ms:resolveMs(h)})).sort((a,b)=>a.ms-b.ms);
+  const cards=list.map(({h,ms})=>{
+    const d=daysToMs(ms);
+    const daysBig=d===0?'Today':String(d);
+    const daysSub=d===0?'happening now':(d===1?'day left':'days left');
+    const dateLabel=fmtShort(new Date(ms));
+    const cardStyle=`position:relative;overflow:hidden;border-radius:18px;height:clamp(170px,23vh,250px);cursor:pointer;border:1px solid rgba(255,255,255,.08);background:radial-gradient(135% 120% at 0% 0%,${h.accent}33,transparent 56%),linear-gradient(165deg,${h.bg[0]},${h.bg[1]});transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s;`;
+    const daysStyleStr=`font:700 clamp(20px,2.3vw,30px)/1 'Space Grotesk';color:${h.accent};text-shadow:0 0 18px ${h.accent}55;`;
+    return `<div data-holiday="${h.id}" style="${cardStyle}">
+      <canvas data-card-id="${h.id}" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
+      <div style="position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgba(6,6,13,0) 42%,rgba(6,6,13,.74) 100%);pointer-events:none;"></div>
+      <div style="position:absolute;left:16px;right:16px;bottom:15px;z-index:3;pointer-events:none;">
+        <div style="font:400 clamp(21px,2.3vw,31px)/1.05 'Instrument Serif';color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.55);">${escHtml(h.name)}</div>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:7px;">
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <span style="${daysStyleStr}">${daysBig}</span>
+            <span style="font:500 11px/1 'Space Grotesk';color:rgba(255,255,255,.5);">${daysSub}</span>
+          </div>
+          <span style="font:500 11px/1 'Space Grotesk';letter-spacing:.04em;color:rgba(255,255,255,.62);">${dateLabel}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  const createTile=`<div id="create-tile" style="position:relative;overflow:hidden;border-radius:18px;height:clamp(170px,23vh,250px);cursor:pointer;border:1.5px dashed rgba(255,255,255,.18);background:rgba(255,255,255,.02);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:border-color .3s,background .3s;">
+    <div style="width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font:300 26px/1 'Space Grotesk';color:rgba(255,255,255,.7);">+</div>
+    <div style="font:400 19px/1 'Instrument Serif';color:rgba(255,255,255,.82);">Create your own</div>
+    <div style="font:500 11px/1 'Space Grotesk';letter-spacing:.04em;color:rgba(255,255,255,.42);">Any date · any canvas</div>
+  </div>`;
+  return cards+createTile;
+}
 
-function draw(){
-  ctx.clearRect(0,0,c.width,c.height);
-  particles.forEach(p=>{
-    p.x+=p.vx;
-    p.y+=p.vy;
-    p.vy+=0.02;
-    p.life--;
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,2,0,Math.PI*2);
-    ctx.fillStyle=p.color;
-    ctx.fill();
+function aboutHTML(){
+  return `<div style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -10%,#171034 0%,#0a0820 45%,#06060d 100%);">
+    <button id="about-back" style="position:absolute;top:22px;left:22px;z-index:5;display:flex;align-items:center;gap:8px;font:600 13px/1 'Space Grotesk';color:rgba(255,255,255,.82);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:10px 15px;border-radius:999px;cursor:pointer;">← All holidays</button>
+    <div style="max-width:680px;margin:0 auto;padding:clamp(96px,15vh,150px) clamp(22px,5vw,40px) 90px;animation:cdfade .6s both;">
+      <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.24em;text-transform:uppercase;color:#f5c542;margin-bottom:18px;">About</div>
+      <h1 style="font:400 clamp(34px,5.5vw,64px)/1.04 'Instrument Serif';color:#fff;margin:0 0 28px;letter-spacing:-.01em;">A countdown for <span style="font-style:italic;color:#f5c542;">every</span> moment.</h1>
+      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 18px;">Countdown is a living calendar of the moments worth waiting for. Every holiday gets its own full-screen timer and its own animated canvas — fireworks on New Year's, snowfall at Christmas, lanterns rising for the Lunar New Year.</p>
+      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 18px;">Open any holiday to watch it tick down, switch between its hand-made canvases, or build a countdown of your own — a birthday, a launch, a trip — and share it with a link that carries every setting.</p>
+      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 34px;">And it keeps itself honest: every celebration rolls forward to its next date automatically, year after year.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;padding:22px 0;border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:34px;">
+        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">40+ holidays across religion, culture, seasons & fun</span></div>
+        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">A dozen+ animated canvases, including emojis</span></div>
+        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">Custom countdowns with shareable links</span></div>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <button id="about-create" style="display:flex;align-items:center;gap:8px;font:600 14px/1 'Space Grotesk';color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:13px 22px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px -8px rgba(245,197,66,.6);">Create your own <span style="font-size:15px;">↗</span></button>
+        <button id="about-browse" style="font:600 14px/1 'Space Grotesk';color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:13px 22px;border-radius:999px;cursor:pointer;">Browse holidays</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function timerFullHTML(){
+  const A=activeData();
+  const stageStyle=`position:absolute;inset:0;overflow:hidden;background:linear-gradient(165deg,${A.bg[0]} 0%,${A.bg[1]} 100%);`;
+  return `<div style="${stageStyle}">
+    <canvas id="timer-canvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;"></canvas>
+    <div style="position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(120% 90% at 50% 42%,transparent 40%,rgba(6,6,13,.55) 100%);"></div>
+    <button id="timer-back" style="position:absolute;top:22px;left:22px;z-index:5;display:flex;align-items:center;gap:8px;font:600 13px/1 'Space Grotesk';color:rgba(255,255,255,.82);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:10px 15px;border-radius:999px;cursor:pointer;">← All holidays</button>
+    <button id="timer-opts-btn" aria-label="Options" style="position:absolute;top:22px;right:22px;z-index:7;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);border-radius:50%;cursor:pointer;color:rgba(255,255,255,.85);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5"></path><circle cx="16" cy="6" r="2"></circle><circle cx="8" cy="12" r="2"></circle><circle cx="13" cy="18" r="2"></circle></svg>
+    </button>
+    <div id="timer-center" style="position:relative;z-index:3;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 20px;">${timerCenterHTML()}</div>
+    <div id="timer-panel">${st.optionsOpen?optionsPanelHTML():''}</div>
+  </div>`;
+}
+
+function timerCenterHTML(){
+  const A=activeData(), acc=A.accent;
+  const rem=remaining();
+  const bigMode=rem<=60&&rem>0, doneMode=rem<=0, boxMode=!bigMode&&!doneMode;
+  const days=Math.floor(rem/86400), hh=Math.floor(rem%86400/3600), mm=Math.floor(rem%3600/60), ss=rem%60;
+  const pad=x=>String(x).padStart(2,'0');
+  const winW=st.winW||1200, winH=st.winH||800;
+
+  let uarr=[{v:days,l:'Days'},{v:hh,l:'Hours'},{v:mm,l:'Minutes'},{v:ss,l:'Seconds'}];
+  while(uarr.length>2 && uarr[0].v===0) uarr.shift();
+  const N=uarr.length;
+  const veryNarrow=winW<380;
+  const cols = veryNarrow?1 : (winW>winH? N : Math.min(2,N));
+  const rows=Math.ceil(N/cols), g=16;
+  const cw=Math.min(0.94*winW,1080), boxW=(cw-(cols-1)*g)/cols;
+  const gridH=Math.max(160,winH*0.5), boxH=(gridH-(rows-1)*g)/rows;
+  const fitMax=Math.min(boxW*0.5, boxH*0.72);
+  const size=st.size==null?0.5:st.size;
+  const num=Math.max(24, fitMax*(0.42+0.58*size));
+  const lab=Math.max(9, Math.min(16, num*0.13));
+  const bigPx=Math.max(60, Math.min(winW*0.9, winH*0.86)*(0.5+0.5*size));
+
+  const tTagStyle=`font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:${acc};opacity:.9;`;
+  const tNameStyle=`margin:14px 0 0;font:400 clamp(34px,6vw,76px)/1 'Instrument Serif';color:#fff;letter-spacing:-.01em;`;
+  const boxesStyle=`display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:${g}px;width:min(94vw,1080px);margin-top:clamp(16px,3.5vh,40px);`;
+  const boxBase=`background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:18px;padding:${Math.round(num*0.2)}px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;`;
+  const numBase=`font:700 ${Math.round(num)}px/1 'Space Grotesk';color:${acc};text-shadow:0 0 ${Math.round(num*0.3)}px ${acc}66;font-variant-numeric:tabular-nums;`;
+  const labBase=`margin-top:${Math.max(5,Math.round(num*0.1))}px;font:600 ${Math.round(lab)}px/1 'Space Grotesk';letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);`;
+  const bigStyle=`font:700 ${Math.round(bigPx)}px/0.9 'Space Grotesk';color:${acc};text-shadow:0 0 ${Math.round(bigPx*0.3)}px ${acc};animation:cdpulse .9s infinite;margin-top:10px;`;
+  const greetStyle=`font:400 clamp(40px,8vw,98px)/1 'Instrument Serif';font-style:italic;color:${acc};text-shadow:0 0 50px ${acc}55;`;
+  const tLabelStyle=labBase;
+
+  let body='';
+  if(boxMode){
+    const cells=uarr.map(u=>{
+      const value=(u.l==='Days'?String(u.v):pad(u.v));
+      const flexCalc=`flex:0 0 calc((100% - ${(cols-1)*g}px) / ${cols});`;
+      return `<div style="${boxBase}${flexCalc}"><div style="${numBase}">${value}</div><div style="${labBase}">${u.l}</div></div>`;
+    }).join('');
+    body=`<div style="${boxesStyle}">${cells}</div>`;
+  } else if(bigMode){
+    body=`<div style="${bigStyle}">${pad(ss)}</div><div style="${tLabelStyle}">seconds to go</div>`;
+  } else if(doneMode){
+    body=`<div style="${greetStyle}">${escHtml(A.greeting)}</div><div style="margin-top:14px;font:500 13px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);">The moment is here</div>`;
+  }
+  return `<div style="${tTagStyle}">${escHtml(A.dateLabel)}</div><h2 style="${tNameStyle}">${escHtml(A.name)}</h2>${body}`;
+}
+
+function optionsPanelHTML(){
+  const A=activeData(), acc=A.accent;
+  optMetaArr = [];
+
+  let custFields = '';
+  if(st.isCustom){
+    const swatchHTML = SWATCHES.map(c=>{
+      const style=`width:30px;height:30px;border-radius:50%;cursor:pointer;background:${c};border:2px solid ${st.custom.accent===c?'#fff':'transparent'};box-shadow:0 0 0 1px rgba(255,255,255,.15)${st.custom.accent===c?',0 0 14px '+c:''};`;
+      return `<button data-swatch="${escAttr(c)}" style="${style}"></button>`;
+    }).join('');
+    custFields = `
+      <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px;">Your countdown</div>
+      <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Title</label>
+      <input id="custom-title" type="text" value="${escAttr(st.custom.title)}" placeholder="My Countdown" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 14px 'Space Grotesk';margin-bottom:16px;">
+      <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Message at zero</label>
+      <input id="custom-message" type="text" value="${escAttr(st.custom.message)}" placeholder="e.g. Happy Birthday!" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 14px 'Space Grotesk';margin-bottom:16px;">
+      <div style="display:flex;gap:10px;margin-bottom:18px;">
+        <div style="flex:1;">
+          <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Date</label>
+          <input id="custom-date" type="date" value="${escAttr(st.custom.dateISO)}" style="width:100%;padding:10px 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 13px 'Space Grotesk';">
+        </div>
+        <div style="width:118px;">
+          <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Time</label>
+          <input id="custom-time" type="time" value="${escAttr(st.custom.time)}" style="width:100%;padding:10px 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 13px 'Space Grotesk';">
+        </div>
+      </div>
+      <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 9px;">Accent</label>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:22px;">${swatchHTML}</div>`;
+  }
+
+  // Canvas list
+  let bgRowsHTML;
+  if(st.isCustom){
+    bgRowsHTML = EFFECTS.map((e,i)=>{
+      const pal=[acc,lighten(acc,40),'#ffffff',lighten(acc,80)];
+      optMetaArr[i]={effect:e.id,palette:pal,emojis:getEmojiSet(),dir:st.custom.emojiDir};
+      const active=st.custom.effect===e.id;
+      return `<button data-effect="${escAttr(e.id)}" style="${rowStyle(active,acc)}">
+        <canvas data-opt-idx="${i}" style="width:42px;height:42px;border-radius:9px;flex:none;background:linear-gradient(160deg,#14121d,#0a0810);box-shadow:inset 0 0 10px rgba(0,0,0,.5);"></canvas>
+        <span style="flex:1;text-align:left;font:600 13px/1 'Space Grotesk';color:#fff;">${escHtml(e.label)}</span>
+        <span style="${dotStyle(active,acc)}"></span>
+      </button>`;
+    }).join('');
+  } else {
+    const h=byId(st.holidayId)||DATA[0];
+    bgRowsHTML = h.backgrounds.map((b,i)=>{
+      optMetaArr[i]={effect:b[0],palette:h.particles,emojis:h.emojis||DEFAULT_EMOJIS,dir:'fall'};
+      const active=st.bg===i;
+      return `<button data-bg-idx="${i}" style="${rowStyle(active,acc)}">
+        <canvas data-opt-idx="${i}" style="width:42px;height:42px;border-radius:9px;flex:none;background:linear-gradient(160deg,#14121d,#0a0810);box-shadow:inset 0 0 10px rgba(0,0,0,.5);"></canvas>
+        <span style="flex:1;text-align:left;font:600 13px/1 'Space Grotesk';color:#fff;">${escHtml(b[1])}</span>
+        <span style="${dotStyle(active,acc)}"></span>
+      </button>`;
+    }).join('');
+  }
+
+  // Emoji builder
+  let emojiBuilder = '';
+  const showEmojiBuilder = st.isCustom && st.custom.effect==='emojis';
+  if(showEmojiBuilder){
+    const selEmojis=st.custom.emojiList||[];
+    const edir=st.custom.emojiDir||'fall';
+    const dirBtnStyle=(active)=>`flex:1;padding:10px;border-radius:11px;cursor:pointer;font:600 12px/1 'Space Grotesk';transition:all .2s;`+(active?`background:${acc};color:#0a0820;border:1px solid ${acc};`:`background:rgba(255,255,255,.04);color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.1);`);
+    const emojiButtons = CLEAN_EMOJIS.map(g=>{
+      const on=selEmojis.includes(g); const full=selEmojis.length>=5&&!on;
+      const style=`display:flex;align-items:center;justify-content:center;width:38px;height:38px;font-size:21px;line-height:1;border-radius:10px;cursor:${full?'not-allowed':'pointer'};opacity:${full?'.4':'1'};background:${on?'rgba(245,197,66,.16)':'rgba(255,255,255,.04)'};border:1px solid ${on?acc+'cc':'rgba(255,255,255,.1)'};transition:all .15s;`;
+      return `<button data-emoji="${escAttr(g)}" style="${style}">${g}</button>`;
+    }).join('');
+    emojiBuilder = `<div style="margin-top:22px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px;">
+        <span style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);">Your emojis</span>
+        <span style="font:600 11px/1 'Space Grotesk';color:#f5c542;">${selEmojis.length}/5</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;">${emojiButtons}</div>
+      <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Direction</div>
+      <div style="display:flex;gap:9px;">
+        <button data-dir="fall" style="${dirBtnStyle(edir==='fall')}">Fall ↓</button>
+        <button data-dir="rise" style="${dirBtnStyle(edir==='rise')}">Rise ↑</button>
+      </div>
+    </div>`;
+  }
+
+  const copyLabel = st.copied?'Copied!':'Copy share link';
+  const size=st.size==null?0.5:st.size;
+  const speed=st.speed==null?0.42:st.speed;
+
+  return `<div style="position:absolute;top:0;right:0;height:100%;width:min(380px,88vw);background:rgba(10,9,18,.82);backdrop-filter:blur(22px);border-left:1px solid rgba(255,255,255,.1);z-index:6;overflow-y:auto;padding:74px 22px 28px;animation:cdpanel .3s both;">
+    ${custFields}
+    <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Number size</div>
+    <input id="size-slider" type="range" min="0" max="1" step="0.01" value="${size}" style="width:100%;accent-color:#f5c542;height:24px;cursor:pointer;margin:0 0 20px;">
+    <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Animation speed</div>
+    <input id="speed-slider" type="range" min="0" max="1" step="0.01" value="${speed}" style="width:100%;accent-color:#f5c542;height:24px;cursor:pointer;margin:0 0 22px;">
+    <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:13px;">Canvas</div>
+    <div style="display:flex;flex-direction:column;gap:9px;">${bgRowsHTML}</div>
+    ${emojiBuilder}
+    <div style="margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.09);">
+      <button id="copy-link-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;font:600 13px/1 'Space Grotesk';color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:13px;border-radius:12px;cursor:pointer;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"></path></svg>
+        ${escHtml(copyLabel)}
+      </button>
+      <div style="text-align:center;font:500 11px/1.4 'Space Grotesk';color:rgba(255,255,255,.38);margin-top:11px;">Share this link — settings travel with it.</div>
+    </div>
+  </div>`;
+}
+
+/* ============ View transitions ============ */
+function goHome(){
+  st.view='home';
+  hoverId=null;
+  timerCanvas=null; tsurf=null;
+  optCanvases={}; optSurf={}; optMetaArr=[];
+  document.getElementById('app').innerHTML = homeFullHTML();
+  bindHome();
+  history.replaceState(null,'',location.pathname);
+}
+function goAbout(){
+  st.view='about';
+  hoverId=null;
+  timerCanvas=null; tsurf=null;
+  cardCanvases={};
+  document.getElementById('app').innerHTML = aboutHTML();
+  bindAbout();
+  history.replaceState(null,'',location.pathname);
+}
+function goTimer(){
+  st.view='timer';
+  hoverId=null;
+  cardCanvases={};
+  if(msurf){ try{msurf.ctx.clearRect(0,0,msurf.canvas.width,msurf.canvas.height);}catch(e){} msurf=null; }
+  document.getElementById('app').innerHTML = timerFullHTML();
+  bindTimer();
+  syncHash();
+}
+function updateGrid(){
+  const g = document.getElementById('home-grid');
+  if(!g) return;
+  cardCanvases = {};
+  g.innerHTML = gridHTML();
+  bindGrid();
+  // Update filter chip styles
+  const counts={all:DATA.length};
+  for(const k of ['religious','cultural','national','seasonal','fun']) counts[k]=DATA.filter(h=>h.cat===k).length;
+  document.querySelectorAll('[data-filter]').forEach(btn=>{
+    const k=btn.getAttribute('data-filter');
+    const active=st.filter===k;
+    btn.setAttribute('style', "font:600 13px/1 'Space Grotesk';letter-spacing:.02em;padding:10px 16px;border-radius:999px;cursor:pointer;transition:all .25s;"+(active
+      ? 'color:#0a0820;background:#ece9f5;border:1px solid #ece9f5;'
+      : 'color:rgba(255,255,255,.74);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);'));
   });
-  particles=particles.filter(p=>p.life>0);
-  requestAnimationFrame(draw);
 }
-draw();
+function updateTimerContent(){
+  const el = document.getElementById('timer-center');
+  if(el) el.innerHTML = timerCenterHTML();
+}
+function updateOptionsPanel(){
+  const el = document.getElementById('timer-panel');
+  if(!el) return;
+  optCanvases={};
+  el.innerHTML = st.optionsOpen ? optionsPanelHTML() : '';
+  // Re-find timer canvas (it should still exist since panel is sibling)
+  timerCanvas = document.getElementById('timer-canvas');
+  bindOptionsPanel();
+}
+
+/* ============ Bind ============ */
+function bindHome(){
+  document.getElementById('about-btn')?.addEventListener('click', goAbout);
+  document.getElementById('create-btn')?.addEventListener('click', openCustom);
+  document.querySelectorAll('[data-filter]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ st.filter=btn.getAttribute('data-filter'); updateGrid(); });
+  });
+  bindGrid();
+}
+function bindGrid(){
+  cardCanvases = {};
+  document.querySelectorAll('[data-card-id]').forEach(cv=>{
+    cardCanvases[cv.getAttribute('data-card-id')] = cv;
+  });
+  document.querySelectorAll('[data-holiday]').forEach(card=>{
+    const id=card.getAttribute('data-holiday');
+    const h=byId(id);
+    if(!h) return;
+    card.addEventListener('click', ()=> openHoliday(id));
+    card.addEventListener('mouseenter', ()=>{
+      hoverId = id;
+      card.style.transform='translateY(-6px) scale(1.012)';
+      card.style.borderColor=h.accent+'88';
+      card.style.boxShadow=`0 20px 52px -14px ${h.accent}66`;
+    });
+    card.addEventListener('mouseleave', ()=>{
+      if(hoverId===id) hoverId=null;
+      card.style.transform='';
+      card.style.borderColor='rgba(255,255,255,.08)';
+      card.style.boxShadow='';
+    });
+  });
+  const tile=document.getElementById('create-tile');
+  if(tile){
+    tile.addEventListener('click', openCustom);
+    tile.addEventListener('mouseenter', ()=>{
+      tile.style.borderColor='rgba(245,197,66,.6)';
+      tile.style.background='rgba(245,197,66,.05)';
+    });
+    tile.addEventListener('mouseleave', ()=>{
+      tile.style.borderColor='rgba(255,255,255,.18)';
+      tile.style.background='rgba(255,255,255,.02)';
+    });
+  }
+}
+function bindAbout(){
+  document.getElementById('about-back')?.addEventListener('click', goHome);
+  document.getElementById('about-create')?.addEventListener('click', openCustom);
+  document.getElementById('about-browse')?.addEventListener('click', goHome);
+}
+function bindTimer(){
+  timerCanvas = document.getElementById('timer-canvas');
+  document.getElementById('timer-back')?.addEventListener('click', goHome);
+  document.getElementById('timer-opts-btn')?.addEventListener('click', ()=>{
+    st.optionsOpen = !st.optionsOpen;
+    updateOptionsPanel();
+  });
+  bindOptionsPanel();
+}
+function bindOptionsPanel(){
+  optCanvases = {};
+  document.querySelectorAll('[data-opt-idx]').forEach(cv=>{
+    optCanvases[+cv.getAttribute('data-opt-idx')] = cv;
+  });
+
+  if(!st.optionsOpen) return;
+
+  // Text inputs - input event, no re-render (preserve focus)
+  document.getElementById('custom-title')?.addEventListener('input', e=>{
+    st.custom.title = e.target.value; st.done=false; syncHash();
+  });
+  document.getElementById('custom-message')?.addEventListener('input', e=>{
+    st.custom.message = e.target.value; st.done=false; syncHash();
+  });
+  document.getElementById('custom-date')?.addEventListener('input', e=>{
+    st.custom.dateISO = e.target.value; st.done=false; syncHash();
+  });
+  document.getElementById('custom-time')?.addEventListener('input', e=>{
+    st.custom.time = e.target.value; st.done=false; syncHash();
+  });
+  document.getElementById('custom-title')?.addEventListener('focus', e=>{ try{e.target.select();}catch(_){} });
+
+  // Sliders - re-render only timer center (size affects display), no panel rebuild
+  document.getElementById('size-slider')?.addEventListener('input', e=>{
+    st.size=+e.target.value; syncHash(); updateTimerContent();
+  });
+  document.getElementById('speed-slider')?.addEventListener('input', e=>{
+    st.speed=+e.target.value; syncHash();
+  });
+
+  // Swatches - rerender panel
+  document.querySelectorAll('[data-swatch]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      st.custom.accent = btn.getAttribute('data-swatch');
+      st.done=false; tsurf=null; syncHash();
+      updateOptionsPanel();
+    });
+  });
+
+  // Canvas options
+  document.querySelectorAll('[data-effect]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      st.custom.effect = btn.getAttribute('data-effect');
+      tsurf=null; syncHash();
+      updateOptionsPanel();
+    });
+  });
+  document.querySelectorAll('[data-bg-idx]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      st.bg = +btn.getAttribute('data-bg-idx');
+      tsurf=null; syncHash();
+      updateOptionsPanel();
+    });
+  });
+
+  // Emoji toggles
+  document.querySelectorAll('[data-emoji]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const g=btn.getAttribute('data-emoji');
+      const cur=st.custom.emojiList||[];
+      let nl;
+      if(cur.includes(g)) nl=cur.filter(x=>x!==g);
+      else if(cur.length<5) nl=[...cur,g];
+      else return;
+      st.custom.emojiList=nl; st.done=false; tsurf=null; syncHash();
+      updateOptionsPanel();
+    });
+  });
+
+  // Direction
+  document.querySelectorAll('[data-dir]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      st.custom.emojiDir = btn.getAttribute('data-dir');
+      st.done=false; tsurf=null; syncHash();
+      updateOptionsPanel();
+    });
+  });
+
+  // Copy link
+  document.getElementById('copy-link-btn')?.addEventListener('click', ()=>{
+    syncHash();
+    try{ navigator.clipboard.writeText(location.href); }catch(e){}
+    st.copied=true;
+    updateOptionsPanel();
+    clearTimeout(copyTimer);
+    copyTimer=setTimeout(()=>{ st.copied=false; if(st.view==='timer' && st.optionsOpen) updateOptionsPanel(); }, 1600);
+  });
+}
+
+/* ============ Navigation actions ============ */
+function openHoliday(id){
+  st.isCustom=false; st.holidayId=id; st.bg=0; st.optionsOpen=false;
+  st.done = remaining()<=0;
+  tsurf=null;
+  goTimer();
+}
+function openCustom(){
+  st.isCustom=true; st.optionsOpen=true; st.done=false;
+  tsurf=null;
+  goTimer();
+}
+
+/* ============ Tick ============ */
+function startTimer(){
+  setInterval(()=>{
+    if(st.view!=='timer') return;
+    const rem = remaining();
+    st.done = rem<=0;
+    st.tick++;
+    updateTimerContent();
+  }, 200);
+}
+
+/* ============ Canvas engine ============ */
+function makeSurface(canvas,effectId,palette,emojis,dir){
+  return { canvas, ctx:canvas.getContext('2d'), parts:[], effectId, palette, emojis:emojis||DEFAULT_EMOJIS, dir:dir||'fall', t:0, acc:0, stars:null, starsW:0, w:0, h:0 };
+}
+function warm(s){ try{ for(let i=0;i<18;i++) drawSurface(s,0.08);}catch(e){} }
+function ensureSize(s){
+  const r=s.canvas.getBoundingClientRect();
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  const w=Math.max(1,Math.round(r.width*dpr)), h=Math.max(1,Math.round(r.height*dpr));
+  if(s.canvas.width!==w) s.canvas.width=w;
+  if(s.canvas.height!==h) s.canvas.height=h;
+  s.w=w; s.h=h;
+}
+function velMul(){ const sp=st.speed==null?0.42:st.speed; return 0.25+1.4*sp; }
+function rateMul(){ const sp=st.speed==null?0.42:st.speed; return 0.55+0.6*sp; }
+
+function drawSurface(s,dt){
+  ensureSize(s);
+  const ctx=s.ctx, w=s.w, h=s.h; if(!w||!h) return;
+  const sc=Math.max(0.5, h/780);
+  let af=(w*h)/(1500*820);
+  s.t+=dt; ctx.clearRect(0,0,w,h);
+  const e=s.effectId;
+  if(e==='stars'){ drawStars(s,af,sc,false); return; }
+  if(['lanterns','bats','embers','rockets','balloons'].includes(e)) drawStars(s,af*0.5,sc,true);
+  spawn(s,dt,af,sc,w,h);
+  const keep=[];
+  for(const p of s.parts){ if(updP(p,dt,s,w,h)){ drawP(ctx,p); keep.push(p);} }
+  s.parts=keep;
+}
+
+function drawStars(s,af,sc,faint){
+  const ctx=s.ctx, w=s.w, h=s.h;
+  if(!s.stars || s.starsW!==w){
+    const n=Math.min(240, Math.round((faint?28:80)*Math.max(0.3,af)));
+    s.stars=[];
+    for(let i=0;i<n;i++){
+      s.stars.push({x:Math.random()*w,y:Math.random()*h*0.94,r:rnd(0.5,1.9)*sc,ph:Math.random()*6.28,tw:rnd(0.5,1.8),big:Math.random()<0.12,col:pick(['#ffffff','#cfe0ff','#ffe9b0'])});
+    }
+    s.starsW=w;
+  }
+  for(const star of s.stars){
+    const a=(faint?0.15:0.35)+(faint?0.16:0.5)*Math.abs(Math.sin(s.t*star.tw+star.ph));
+    ctx.globalAlpha=a; ctx.fillStyle=star.col;
+    if(star.big && !faint){
+      ctx.save(); ctx.translate(star.x,star.y);
+      const r=star.r*2.4;
+      ctx.beginPath();
+      ctx.moveTo(0,-r);ctx.lineTo(r*0.22,-r*0.22);ctx.lineTo(r,0);ctx.lineTo(r*0.22,r*0.22);
+      ctx.lineTo(0,r);ctx.lineTo(-r*0.22,r*0.22);ctx.lineTo(-r,0);ctx.lineTo(-r*0.22,-r*0.22);
+      ctx.closePath();ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.beginPath(); ctx.arc(star.x,star.y,star.r,0,6.2832); ctx.fill();
+    }
+  }
+  ctx.globalAlpha=1;
+}
+
+function spawn(s,dt,af,sc,w,h){
+  const e=s.effectId, rm=rateMul(), vm=velMul();
+  if(e==='fireworks'){
+    s.acc += dt*1.15*rm*Math.max(0.5,Math.min(2.4,af));
+    while(s.acc>1){
+      s.acc-=1;
+      s.parts.push({shape:'rocket',kind:'rocket',x:rnd(w*0.14,w*0.86),y:h+10,vy:-rnd(0.55,0.82)*h*vm,targetY:rnd(h*0.1,h*0.46),size:rnd(1.6,2.6)*sc,color:pick(s.palette),alpha:1});
+    }
+    return;
+  }
+  const c=CFG[e]; if(!c || s.parts.length>200) return;
+  s.acc += dt*c.rate*rm*Math.max(0.25,af);
+  while(s.acc>1){ s.acc-=1; spawnOne(s,c,sc,w,h); }
+}
+function spawnOne(s,c,sc,w,h){
+  const vm=velMul();
+  const col=pick(s.palette), size=rnd(c.size[0],c.size[1])*sc;
+  const base={shape:c.shape,color:col,size,rot:Math.random()*6.28,vr:rnd(-c.spin,c.spin),phase:Math.random()*6.28,sway:c.sway*sc,alpha:1};
+  if(c.shape==='emoji') base.glyph=pick(s.emojis||DEFAULT_EMOJIS);
+  let kind=c.kind; if(c.shape==='emoji' && s.dir==='rise') kind='rise';
+  if(kind==='fall'){
+    s.parts.push(Object.assign({},base,{kind:'fall',x:Math.random()*w,y:-22*sc,vx:rnd(-8,8)*sc*vm,vy:rnd(c.vy[0],c.vy[1])*sc*vm,ay:0}));
+  } else if(kind==='rise'){
+    const lf=c.life||[4,7]; const life=rnd(lf[0],lf[1]);
+    s.parts.push(Object.assign({},base,{kind:'rise',x:Math.random()*w,y:h+22*sc,vx:rnd(-6,6)*sc*vm,vy:-rnd(c.vy[0],c.vy[1])*sc*vm,ay:0,life,max:life}));
+  } else if(kind==='cross'){
+    const fromL=Math.random()<0.5; const sp=rnd(110,200)*sc*vm;
+    s.parts.push(Object.assign({},base,{kind:'cross',x:fromL?-40:w+40,y:rnd(h*0.1,h*0.62),vx:fromL?sp:-sp,vy:0,ay:0,phase:Math.random()*6.28}));
+  }
+}
+
+function updP(p,dt,s,w,h){
+  if(p.shape==='rocket'){ p.y+=p.vy*dt; if(p.y<=p.targetY){ explode(s,p); return false; } return true; }
+  if(p.shape==='spark'){ p.vy+=p.ay*dt; p.vx*=0.985; p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; p.alpha=Math.max(0,p.life/p.max); return p.life>0; }
+  if(p.ay) p.vy+=p.ay*dt;
+  if(p.kind==='cross'){ p.x+=p.vx*dt; p.y+=Math.sin(s.t*4+p.phase)*16*dt; return p.x>-80 && p.x<w+80; }
+  p.x += (p.vx + Math.sin(s.t*1.5+p.phase)*p.sway)*dt;
+  p.y += p.vy*dt; p.rot += p.vr*dt;
+  if(p.max!=null){ p.life-=dt; const el=p.max-p.life; p.alpha=Math.max(0,Math.min(1,Math.min(el/0.5,p.life/1.0))); if(p.life<=0) return false; }
+  if(p.vy>0) return p.y<h+44;
+  return p.y>-66;
+}
+function explode(s,p){
+  const n=20+(Math.random()*16|0);
+  for(let i=0;i<n;i++){
+    const a=6.2832*i/n+rnd(-0.1,0.1), sp=rnd(50,175)*(p.size/2.2+0.4);
+    const life=rnd(0.7,1.5);
+    s.parts.push({shape:'spark',kind:'spark',x:p.x,y:p.targetY,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,ay:60,size:rnd(1.5,3.4),color:Math.random()<0.28?'#ffffff':p.color,life,max:life,alpha:1});
+  }
+}
+
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+function drawP(ctx,p){
+  ctx.globalAlpha=p.alpha==null?1:p.alpha;
+  const z=p.size;
+  switch(p.shape){
+    case 'circle': ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,z,0,6.2832); ctx.fill(); break;
+    case 'rect': ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; ctx.fillRect(-z,-z*0.5,z*2,z*0.92); ctx.restore(); break;
+    case 'leaf': ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; ctx.beginPath(); ctx.ellipse(0,0,z,z*0.5,0,0,6.2832); ctx.fill(); ctx.restore(); break;
+    case 'petal': ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; ctx.beginPath(); ctx.ellipse(0,0,z*0.55,z,0,0,6.2832); ctx.fill(); ctx.restore(); break;
+    case 'rain': ctx.save(); ctx.strokeStyle=p.color; ctx.globalAlpha=(p.alpha==null?1:p.alpha)*0.6; ctx.lineWidth=Math.max(1,z*0.16); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x,p.y+z*1.7); ctx.stroke(); ctx.restore(); break;
+    case 'sparkle4': { ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; const r=z; ctx.beginPath(); ctx.moveTo(0,-r); ctx.quadraticCurveTo(0,0,r,0); ctx.quadraticCurveTo(0,0,0,r); ctx.quadraticCurveTo(0,0,-r,0); ctx.quadraticCurveTo(0,0,0,-r); ctx.fill(); ctx.restore(); break; }
+    case 'emoji': ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*0.4); ctx.font=Math.round(z*2.1)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(p.glyph||'⭐',0,0); ctx.restore(); break;
+    case 'shamrock': { ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; const r=z*0.46; ctx.beginPath(); ctx.arc(-r*0.8,-r*0.2,r,0,6.2832); ctx.arc(r*0.8,-r*0.2,r,0,6.2832); ctx.arc(0,-r*1.2,r,0,6.2832); ctx.fill(); ctx.strokeStyle=p.color; ctx.lineWidth=z*0.16; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,z*0.95); ctx.stroke(); ctx.restore(); break; }
+    case 'heart': { ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*0.3); ctx.fillStyle=p.color; const k=z; ctx.beginPath(); ctx.moveTo(0,k*0.32); ctx.bezierCurveTo(0,-k*0.12,-k,-k*0.12,-k,k*0.34); ctx.bezierCurveTo(-k,k*0.74,0,k*0.96,0,k*1.12); ctx.bezierCurveTo(0,k*0.96,k,k*0.74,k,k*0.34); ctx.bezierCurveTo(k,-k*0.12,0,-k*0.12,0,k*0.32); ctx.fill(); ctx.restore(); break; }
+    case 'lantern': { ctx.save(); ctx.translate(p.x,p.y); ctx.shadowColor=p.color; ctx.shadowBlur=z*1.7; ctx.fillStyle=p.color; rr(ctx,-z*0.5,-z*0.7,z,z*1.4,z*0.34); ctx.fill(); ctx.shadowBlur=0; ctx.globalAlpha=(p.alpha==null?1:p.alpha)*0.7; ctx.fillStyle='rgba(255,248,220,0.9)'; ctx.beginPath(); ctx.ellipse(0,0,z*0.26,z*0.4,0,0,6.2832); ctx.fill(); ctx.restore(); break; }
+    case 'ember': { ctx.save(); ctx.shadowColor=p.color; ctx.shadowBlur=z*3.2; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,z*0.7,0,6.2832); ctx.fill(); ctx.restore(); break; }
+    case 'balloon': { ctx.save(); ctx.translate(p.x,p.y); ctx.fillStyle=p.color; ctx.beginPath(); ctx.ellipse(0,0,z*0.7,z,0,0,6.2832); ctx.fill(); ctx.beginPath(); ctx.moveTo(-z*0.12,z); ctx.lineTo(z*0.12,z); ctx.lineTo(0,z*1.16); ctx.closePath(); ctx.fill(); ctx.strokeStyle='rgba(255,255,255,.4)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(0,z*1.16); ctx.quadraticCurveTo(z*0.2,z*1.5,0,z*1.9); ctx.stroke(); ctx.fillStyle='rgba(255,255,255,.4)'; ctx.beginPath(); ctx.ellipse(-z*0.26,-z*0.34,z*0.15,z*0.24,0.5,0,6.2832); ctx.fill(); ctx.restore(); break; }
+    case 'bubble': { ctx.save(); ctx.translate(p.x,p.y); ctx.strokeStyle=p.color; ctx.globalAlpha=(p.alpha==null?1:p.alpha)*0.85; ctx.lineWidth=Math.max(1,z*0.12); ctx.beginPath(); ctx.arc(0,0,z,0,6.2832); ctx.stroke(); ctx.globalAlpha=(p.alpha==null?1:p.alpha)*0.55; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(-z*0.32,-z*0.32,z*0.16,0,6.2832); ctx.fill(); ctx.restore(); break; }
+    case 'rocket2': { ctx.save(); ctx.translate(p.x,p.y); ctx.fillStyle=p.color; rr(ctx,-z*0.32,-z*0.8,z*0.64,z*1.3,z*0.2); ctx.fill(); ctx.beginPath(); ctx.moveTo(-z*0.32,-z*0.5); ctx.lineTo(0,-z*1.15); ctx.lineTo(z*0.32,-z*0.5); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(-z*0.32,z*0.2); ctx.lineTo(-z*0.6,z*0.62); ctx.lineTo(-z*0.32,z*0.5); ctx.closePath(); ctx.moveTo(z*0.32,z*0.2); ctx.lineTo(z*0.6,z*0.62); ctx.lineTo(z*0.32,z*0.5); ctx.closePath(); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(0,-z*0.25,z*0.16,0,6.2832); ctx.fill(); ctx.fillStyle=(Math.random()<0.5?'#ffd166':'#ff7a18'); ctx.shadowColor='#ff7a18'; ctx.shadowBlur=z; ctx.beginPath(); ctx.moveTo(-z*0.18,z*0.5); ctx.lineTo(0,z*(0.9+Math.random()*0.5)); ctx.lineTo(z*0.18,z*0.5); ctx.closePath(); ctx.fill(); ctx.restore(); break; }
+    case 'butterfly': { ctx.save(); ctx.translate(p.x,p.y); const fl=Math.abs(Math.sin(p.x*0.05))*0.7+0.3; ctx.fillStyle=p.color; ctx.beginPath(); ctx.ellipse(-z*0.5*fl,-z*0.3,z*0.5*fl,z*0.42,0.5,0,6.2832); ctx.fill(); ctx.beginPath(); ctx.ellipse(z*0.5*fl,-z*0.3,z*0.5*fl,z*0.42,-0.5,0,6.2832); ctx.fill(); ctx.beginPath(); ctx.ellipse(-z*0.42*fl,z*0.32,z*0.4*fl,z*0.32,-0.4,0,6.2832); ctx.fill(); ctx.beginPath(); ctx.ellipse(z*0.42*fl,z*0.32,z*0.4*fl,z*0.32,0.4,0,6.2832); ctx.fill(); ctx.fillStyle='rgba(20,20,30,.85)'; ctx.beginPath(); ctx.ellipse(0,0,z*0.1,z*0.5,0,0,6.2832); ctx.fill(); ctx.restore(); break; }
+    case 'spark': { ctx.save(); ctx.shadowColor=p.color; ctx.shadowBlur=z*2.4; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,z*0.8,0,6.2832); ctx.fill(); ctx.restore(); break; }
+    case 'bat': { ctx.save(); ctx.translate(p.x,p.y); const dir=p.vx<0?-1:1; ctx.scale(dir,1); ctx.fillStyle=p.color; const f=Math.sin(p.x*0.06)*z*0.4; ctx.beginPath(); ctx.arc(0,0,z*0.34,0,6.2832); ctx.moveTo(0,0); ctx.quadraticCurveTo(-z*0.9,-z*0.5+f,-z*1.4,z*0.05); ctx.quadraticCurveTo(-z*0.75,z*0.12,0,z*0.28); ctx.moveTo(0,0); ctx.quadraticCurveTo(z*0.9,-z*0.5+f,z*1.4,z*0.05); ctx.quadraticCurveTo(z*0.75,z*0.12,0,z*0.28); ctx.fill(); ctx.restore(); break; }
+  }
+  ctx.globalAlpha=1; ctx.shadowBlur=0;
+}
+
+/* ============ RAF loop ============ */
+let lastRafTime = performance.now(), rafFrame = 0;
+function rafLoop(now){
+  let dt=(now-lastRafTime)/1000; lastRafTime=now;
+  if(!(dt>0)||dt>0.06) dt=0.03;
+  rafFrame++;
+  try{
+    // Timer canvas
+    if(st.view==='timer' && timerCanvas){
+      const eid=timerEffect(), pal=timerPalette();
+      const dir=st.isCustom?st.custom.emojiDir:'fall';
+      const key=eid+'|'+pal.join(',')+'|'+dir;
+      if(!tsurf || tsurf.canvas!==timerCanvas || tsurf.key!==key){
+        tsurf=makeSurface(timerCanvas,eid,pal,getEmojiSet(),dir);
+        tsurf.key=key; warm(tsurf);
+      }
+      drawSurface(tsurf,dt);
+    }
+    // Option thumbnails
+    if(st.view==='timer' && st.optionsOpen && rafFrame%2===0){
+      for(const k in optCanvases){
+        const cv=optCanvases[k], meta=optMetaArr[k];
+        if(!cv||!meta) continue;
+        const key=meta.effect+'|'+meta.palette.join(',')+'|'+(meta.dir||'fall');
+        if(!optSurf[k]||optSurf[k].canvas!==cv||optSurf[k].key!==key){
+          optSurf[k]=makeSurface(cv,meta.effect,meta.palette,meta.emojis,meta.dir);
+          optSurf[k].key=key; warm(optSurf[k]);
+        }
+        drawSurface(optSurf[k],dt*2);
+      }
+    } else if(!st.optionsOpen && Object.keys(optSurf).length){
+      optSurf={};
+    }
+    // Card hover
+    if(st.view==='home' && hoverId && cardCanvases[hoverId]){
+      const ho=byId(hoverId), cv=cardCanvases[hoverId];
+      if(msurf && (msurf.canvas!==cv || msurf.id!==hoverId)){
+        try{ msurf.ctx.clearRect(0,0,msurf.canvas.width,msurf.canvas.height);}catch(e){}
+        msurf=null;
+      }
+      if(!msurf){ msurf=makeSurface(cv,ho.backgrounds[0][0],ho.particles,ho.emojis); msurf.id=hoverId; warm(msurf); }
+      drawSurface(msurf,dt);
+    } else if(msurf){
+      try{ msurf.ctx.clearRect(0,0,msurf.canvas.width,msurf.canvas.height);}catch(e){}
+      msurf=null;
+    }
+  }catch(e){}
+  requestAnimationFrame(rafLoop);
+}
+
+/* ============ Init ============ */
+function init(){
+  parseHash();
+  if(st.view==='timer'){ st.done=remaining()<=0; goTimer(); }
+  else { goHome(); }
+  startTimer();
+  requestAnimationFrame(rafLoop);
+  window.addEventListener('resize', ()=>{
+    st.winW=window.innerWidth; st.winH=window.innerHeight;
+    if(msurf) msurf.stars=null;
+    if(tsurf) tsurf.stars=null;
+    if(st.view==='timer') updateTimerContent();
+  });
+  window.addEventListener('hashchange', ()=>{
+    // Allow external hash-based deep linking
+  });
+}
+init();
+})();
 </script>
 </body>
 </html>
