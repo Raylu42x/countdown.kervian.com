@@ -14,6 +14,9 @@
 - Shareable hash links — all settings encode into the URL
 - About page
 - Self-rolling dates: fixed, nth-weekday, last-weekday, Easter (+offset for Mardi Gras), and published-table holidays auto-advance year over year
+- Browser back button returns from timer to home
+- Countdown numbers scale to fill large/wide viewports (no hardcoded 1080px cap)
+- Emoji canvas listed first in the custom countdown canvas picker
 
 ## Possible next ideas
 

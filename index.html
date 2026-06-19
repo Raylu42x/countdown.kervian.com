@@ -197,12 +197,13 @@ function activeData(){
 }
 
 /* ============ Hash / nav ============ */
-function syncHash(){
+function syncHash(push){
   if(st.view!=='timer'){ history.replaceState(null,'',location.pathname); return; }
   let h;
   if(st.isCustom){ const c=st.custom; h='#v=timer&c='+encodeURIComponent(JSON.stringify({t:c.title,d:c.dateISO,tm:c.time,a:c.accent,e:c.effect,s:st.size,sp:st.speed,msg:c.message,el:c.emojiList,ed:c.emojiDir})); }
   else { h='#v=timer&h='+st.holidayId+'&bg='+st.bg+'&sz='+st.size+'&sp='+st.speed; }
-  history.replaceState(null,'',location.pathname+h);
+  if(push) history.pushState(null,'',location.pathname+h);
+  else history.replaceState(null,'',location.pathname+h);
 }
 function parseHash(){
   try{
@@ -333,8 +334,8 @@ function timerCenterHTML(){
   const veryNarrow=winW<380;
   const cols = veryNarrow?1 : (winW>winH? N : Math.min(2,N));
   const rows=Math.ceil(N/cols), g=16;
-  const cw=Math.min(0.94*winW,1080), boxW=(cw-(cols-1)*g)/cols;
-  const gridH=Math.max(160,winH*0.5), boxH=(gridH-(rows-1)*g)/rows;
+  const cw=winW*0.94, boxW=(cw-(cols-1)*g)/cols;
+  const gridH=Math.max(160,winH*0.56), boxH=(gridH-(rows-1)*g)/rows;
   const fitMax=Math.min(boxW*0.5, boxH*0.72);
   const size=st.size==null?0.5:st.size;
   const num=Math.max(24, fitMax*(0.42+0.58*size));
@@ -343,7 +344,7 @@ function timerCenterHTML(){
 
   const tTagStyle=`font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:${acc};opacity:.9;`;
   const tNameStyle=`margin:14px 0 0;font:400 clamp(34px,6vw,76px)/1 'Instrument Serif';color:#fff;letter-spacing:-.01em;`;
-  const boxesStyle=`display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:${g}px;width:min(94vw,1080px);margin-top:clamp(16px,3.5vh,40px);`;
+  const boxesStyle=`display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:${g}px;width:${Math.round(cw)}px;max-width:94vw;margin-top:clamp(16px,3.5vh,40px);`;
   const boxBase=`background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:18px;padding:${Math.round(num*0.2)}px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;`;
   const numBase=`font:700 ${Math.round(num)}px/1 'Space Grotesk';color:${acc};text-shadow:0 0 ${Math.round(num*0.3)}px ${acc}66;font-variant-numeric:tabular-nums;`;
   const labBase=`margin-top:${Math.max(5,Math.round(num*0.1))}px;font:600 ${Math.round(lab)}px/1 'Space Grotesk';letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);`;
@@ -400,7 +401,8 @@ function optionsPanelHTML(){
   // Canvas list
   let bgRowsHTML;
   if(st.isCustom){
-    bgRowsHTML = EFFECTS.map((e,i)=>{
+    const customEffects = [EFFECTS.find(e=>e.id==='emojis'), ...EFFECTS.filter(e=>e.id!=='emojis')];
+    bgRowsHTML = customEffects.map((e,i)=>{
       const pal=[acc,lighten(acc,40),'#ffffff',lighten(acc,80)];
       optMetaArr[i]={effect:e.id,palette:pal,emojis:getEmojiSet(),dir:st.custom.emojiDir};
       const active=st.custom.effect===e.id;
@@ -491,14 +493,14 @@ function goAbout(){
   bindAbout();
   history.replaceState(null,'',location.pathname);
 }
-function goTimer(){
+function goTimer(push){
   st.view='timer';
   hoverId=null;
   cardCanvases={};
   if(msurf){ try{msurf.ctx.clearRect(0,0,msurf.canvas.width,msurf.canvas.height);}catch(e){} msurf=null; }
   document.getElementById('app').innerHTML = timerFullHTML();
   bindTimer();
-  syncHash();
+  syncHash(push);
 }
 function updateGrid(){
   const g = document.getElementById('home-grid');
@@ -685,12 +687,12 @@ function openHoliday(id){
   st.isCustom=false; st.holidayId=id; st.bg=0; st.optionsOpen=false;
   st.done = remaining()<=0;
   tsurf=null;
-  goTimer();
+  goTimer(true);
 }
 function openCustom(){
   st.isCustom=true; st.optionsOpen=true; st.done=false;
   tsurf=null;
-  goTimer();
+  goTimer(true);
 }
 
 /* ============ Tick ============ */
@@ -894,10 +896,11 @@ function rafLoop(now){
 /* ============ Init ============ */
 function init(){
   parseHash();
-  if(st.view==='timer'){ st.done=remaining()<=0; goTimer(); }
+  if(st.view==='timer'){ st.done=remaining()<=0; goTimer(false); }
   else { goHome(); }
   startTimer();
   requestAnimationFrame(rafLoop);
+  window.addEventListener('popstate', ()=>{ if(st.view==='timer') goHome(); });
   window.addEventListener('resize', ()=>{
     st.winW=window.innerWidth; st.winH=window.innerHeight;
     if(msurf) msurf.stars=null;
