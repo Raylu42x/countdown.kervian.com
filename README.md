@@ -1,29 +1,55 @@
 # countdown.kervian.com
 
-A holiday countdown site at [countdown.kervian.com](https://countdown.kervian.com).
+> Every moment, counted beautifully.
+
+A countdown to anything — 49 prebuilt holidays, custom dates with shareable URLs, and 18 animated canvas effects. One self-contained HTML file. No accounts, no tracking, no install.
+
+**→ [Try it at countdown.kervian.com](https://countdown.kervian.com)**
+
+![Home page — countdown cards sorted soonest first](./docs/screenshot-home.png)
 
 ## What it does
 
-- **43 holidays** across 6 categories: Religious, Cultural, National, Seasonal, Fun
-- **Home page**: responsive card grid sorted soonest-first, with category filters and animated canvas previews on hover
-- **Full-screen timer**: counts down to the next occurrence of any holiday with animated canvas backgrounds; switches between box / single-seconds / done-greeting modes automatically
-- **18 canvas effects**: fireworks, confetti, sparkles, emojis, balloons, bubbles, rockets, hearts, snowfall, petals, rain, sky lanterns, embers, falling leaves, shamrocks, butterflies, starlight, bats
-- **Custom countdowns**: set any title, date/time, accent color, canvas, and emoji set — then share via a URL that encodes every setting
-- **Self-maintaining dates**: fixed, nth-weekday, last-weekday, Easter offset, and published-table (lunar/observed) rules auto-advance every year — no maintenance needed
-- **About page** with site description
+- **49 prebuilt holidays** across 5 categories — Religious, Cultural, National, Seasonal, Fun
+- **Full-screen timer** with 18 animated canvas backgrounds: fireworks, confetti, sparkles, balloons, bubbles, rockets, hearts, snowfall, petals, rain, sky lanterns, embers, falling leaves, shamrocks, butterflies, starlight, bats, emojis
+- **Custom countdowns** — set any title, date and time, accent color, canvas effect, message, and emoji set
+- **Shareable URLs** — your custom countdown is encoded in the URL hash, including the source timezone so a link from New York hits the same moment for a viewer in Tokyo
+- **Self-maintaining holidays** — fixed dates, nth-weekday, last-weekday, Easter offsets, and astronomical / lunar tables auto-advance every year with no maintenance
+- **Responsive home grid** sorted soonest-first, with category filters and live canvas previews on hover
+
+## Custom countdowns
+
+Pick any future moment, style it, and send a link.
+
+![Custom countdown — pick a title, date, color, effect, and emojis](./docs/screenshot-custom.png)
+
+The URL itself stores everything — title, date, time, source timezone, accent color, animation, emojis. No backend, no login. The recipient opens the link and sees your exact countdown.
+
+## Full-screen timer
+
+Click any card and the countdown takes over the screen with its own animation.
+
+![Independence Day full-screen timer with fireworks](./docs/screenshot-timer.png)
+
+When the moment arrives, the timer switches to a done-greeting mode automatically.
 
 ## Tech
 
-Single self-contained `index.html` — vanilla JS, no framework, no build step. Google Fonts (Instrument Serif + Space Grotesk) loaded from CDN. Everything else is inline.
+One self-contained `index.html` — vanilla JS, no framework, no build step, no dependencies beyond Google Fonts (Instrument Serif + Space Grotesk) loaded from a CDN. The entire site is ~2400 lines.
 
-## Files
+## Repo layout
 
 ```
-index.html          — the entire site
-docs/               — project notes
-project/            — original design handoff files (reference only)
+index.html       — the whole site
+docs/            — screenshots and project notes
+project/         — original design handoff files (reference only)
+CNAME            — custom domain config for GitHub Pages
 ```
 
 ## Deployment
 
-Hosted on GitHub Pages. Custom domain set via `CNAME`. To deploy changes, push to `main`.
+Hosted on GitHub Pages. Pushing to `main` deploys.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
