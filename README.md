@@ -8,7 +8,7 @@ A countdown to anything — 49 prebuilt holidays, custom dates with shareable UR
 
 ## Tour of the site
 
-https://github.com/user-attachments/assets/d4e1a901-0c2a-495f-bfa1-da6d557fcebb
+[Screen Recording Tour](https://github.com/user-attachments/assets/d4e1a901-0c2a-495f-bfa1-da6d557fcebb)
 
 ## What it does
 
