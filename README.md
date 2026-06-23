@@ -57,3 +57,6 @@ Hosted on GitHub Pages. Pushing to `main` deploys.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Email
+hello@kervian.com
