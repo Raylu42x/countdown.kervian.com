@@ -6,9 +6,13 @@ A countdown to anything — 49 prebuilt holidays, custom dates with shareable UR
 
 **→ [Try it at countdown.kervian.com](https://countdown.kervian.com)**
 
-![Home page — countdown cards sorted soonest first](./docs/screenshot-home.png)
+## Tour of the site
+
+https://github.com/user-attachments/assets/d4e1a901-0c2a-495f-bfa1-da6d557fcebb
 
 ## What it does
+
+![Home page — countdown cards sorted soonest first](./docs/screenshot-home.png)
 
 - **49 prebuilt holidays** across 5 categories — Religious, Cultural, National, Seasonal, Fun
 - **Full-screen timer** with 18 animated canvas backgrounds: fireworks, confetti, sparkles, balloons, bubbles, rockets, hearts, snowfall, petals, rain, sky lanterns, embers, falling leaves, shamrocks, butterflies, starlight, bats, emojis
