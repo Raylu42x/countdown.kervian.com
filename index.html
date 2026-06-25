@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;height:100%;background:#06060d;-webkit-font-smoothing:antialiased;}
+html,body{margin:0;padding:0;height:100%;background:#0c0a09;-webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:10px;height:10px;}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -20,7 +20,7 @@ input[type=date],input[type=time],input[type=text]{color-scheme:dark;}
 </style>
 </head>
 <body>
-<div id="app" style="position:fixed;inset:0;overflow:hidden;background:#06060d;color:#ece9f5;font-family:'Space Grotesk',system-ui,sans-serif;"></div>
+<div id="app" style="position:fixed;inset:0;overflow:hidden;background:#0c0a09;color:#ece9f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"></div>
 <script>
 (function(){
 'use strict';
@@ -326,7 +326,7 @@ function activeData() {
       name: c.title || 'My Countdown',
       greeting,
       accent: c.accent,
-      bg: ['#10122a', '#05060f'],
+      bg: ['#15110c', '#0a0807'],
       // Render the date in the *creator's* timezone so a shared URL shows
       // "Aug 15" wherever the viewer is, matching what the creator picked.
       dateLabel: fmtDate(targetDate, c.tz)
@@ -420,18 +420,18 @@ function homeFullHTML(){
   for(const k of ['religious','cultural','national','seasonal','fun']) counts[k]=DATA.filter(h=>h.cat===k).length;
   const filters=Object.keys(CATS).map(k=>{
     const active=st.filter===k;
-    const chipStyle="font:600 13px/1 'Space Grotesk';letter-spacing:.02em;padding:10px 16px;border-radius:999px;cursor:pointer;transition:all .25s;"+(active
+    const chipStyle="font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.02em;padding:10px 16px;border-radius:999px;cursor:pointer;transition:all .25s;"+(active
       ? 'color:#0a0820;background:#ece9f5;border:1px solid #ece9f5;'
       : 'color:rgba(255,255,255,.74);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);');
     return `<button data-filter="${k}" style="${chipStyle}">${escHtml(CATS[k])}<span style="opacity:.5;margin-left:7px;font-weight:500;">${counts[k]}</span></button>`;
   }).join('');
 
   return `
-    <div style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -10%,#171034 0%,#0a0820 45%,#06060d 100%);">
+    <div style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -10%,#1a1410 0%,#100c0a 45%,#0c0a09 100%);">
       <div style="max-width:1500px;margin:0 auto;padding:clamp(14px,2.5vw,28px) clamp(18px,4vw,56px) 80px;">
         <header style="display:flex;align-items:center;justify-content:flex-end;gap:18px;flex-wrap:wrap;">
-          <button id="about-btn" style="font:600 13px/1 'Space Grotesk';letter-spacing:.02em;color:rgba(255,255,255,.7);background:none;border:none;cursor:pointer;padding:8px 4px;">About</button>
-          <button id="create-btn" style="display:flex;align-items:center;gap:8px;font:600 13px/1 'Space Grotesk';letter-spacing:.02em;color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:11px 18px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px -8px rgba(245,197,66,.6);">Create your own <span style="font-size:15px;">↗</span></button>
+          <button id="about-btn" style="font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.02em;color:rgba(255,255,255,.7);background:none;border:none;cursor:pointer;padding:8px 4px;">About</button>
+          <button id="create-btn" style="display:flex;align-items:center;gap:8px;font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.02em;color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:11px 18px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px -8px rgba(245,197,66,.6);">Create your own <span style="font-size:15px;">↗</span></button>
         </header>
         <div style="margin:clamp(2px,0.6vw,8px) 0 clamp(18px,3vw,34px);max-width:760px;animation:cdfade .6s both;">
           <h1 style="font:400 clamp(40px,7.4vw,92px)/0.98 'Instrument Serif';letter-spacing:-.01em;color:#fff;margin:0;">Every moment,<br><span style="font-style:italic;color:#f5c542;">counted</span> beautifully.</h1>
@@ -450,48 +450,48 @@ function gridHTML(){
     const daysSub=d===0?'happening now':(d===1?'day left':'days left');
     const dateLabel=fmtShort(new Date(ms));
     const cardStyle=`position:relative;overflow:hidden;border-radius:18px;height:clamp(170px,23vh,250px);cursor:pointer;border:1px solid rgba(255,255,255,.08);background:radial-gradient(135% 120% at 0% 0%,${h.accent}33,transparent 56%),linear-gradient(165deg,${h.bg[0]},${h.bg[1]});transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s;`;
-    const daysStyleStr=`font:700 clamp(20px,2.3vw,30px)/1 'Space Grotesk';color:${h.accent};text-shadow:0 0 18px ${h.accent}55;`;
+    const daysStyleStr=`font:700 clamp(20px,2.3vw,30px)/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:${h.accent};text-shadow:0 0 18px ${h.accent}55;`;
     return `<div data-holiday="${h.id}" style="${cardStyle}">
       <canvas data-card-id="${h.id}" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
-      <div style="position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgba(6,6,13,0) 42%,rgba(6,6,13,.74) 100%);pointer-events:none;"></div>
+      <div style="position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgba(12,10,9,0) 42%,rgba(12,10,9,.74) 100%);pointer-events:none;"></div>
       <div style="position:absolute;left:16px;right:16px;bottom:15px;z-index:3;pointer-events:none;">
         <div style="font:400 clamp(21px,2.3vw,31px)/1.05 'Instrument Serif';color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.55);">${escHtml(h.name)}</div>
         <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-top:7px;">
           <div style="display:flex;align-items:baseline;gap:6px;">
             <span style="${daysStyleStr}">${daysBig}</span>
-            <span style="font:500 11px/1 'Space Grotesk';color:rgba(255,255,255,.5);">${daysSub}</span>
+            <span style="font:500 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.5);">${daysSub}</span>
           </div>
-          <span style="font:500 11px/1 'Space Grotesk';letter-spacing:.04em;color:rgba(255,255,255,.62);">${dateLabel}</span>
+          <span style="font:500 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.04em;color:rgba(255,255,255,.62);">${dateLabel}</span>
         </div>
       </div>
     </div>`;
   }).join('');
   const createTile=`<div id="create-tile" style="position:relative;overflow:hidden;border-radius:18px;height:clamp(170px,23vh,250px);cursor:pointer;border:1.5px dashed rgba(255,255,255,.18);background:rgba(255,255,255,.02);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:border-color .3s,background .3s;">
-    <div style="width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font:300 26px/1 'Space Grotesk';color:rgba(255,255,255,.7);">+</div>
+    <div style="width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font:300 26px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.7);">+</div>
     <div style="font:400 19px/1 'Instrument Serif';color:rgba(255,255,255,.82);">Create your own</div>
-    <div style="font:500 11px/1 'Space Grotesk';letter-spacing:.04em;color:rgba(255,255,255,.42);">Any date on any canvas</div>
+    <div style="font:500 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.04em;color:rgba(255,255,255,.42);">Any date on any canvas</div>
   </div>`;
   return cards+createTile;
 }
 
 function aboutHTML(){
-  return `<div style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -10%,#171034 0%,#0a0820 45%,#06060d 100%);">
-    <button id="about-back" style="position:absolute;top:22px;left:22px;z-index:5;display:flex;align-items:center;gap:8px;font:600 13px/1 'Space Grotesk';color:rgba(255,255,255,.82);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:10px 15px;border-radius:999px;cursor:pointer;">← All holidays</button>
+  return `<div style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;background:radial-gradient(120% 80% at 50% -10%,#1a1410 0%,#100c0a 45%,#0c0a09 100%);">
+    <button id="about-back" style="position:absolute;top:22px;left:22px;z-index:5;display:flex;align-items:center;gap:8px;font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.82);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:10px 15px;border-radius:999px;cursor:pointer;">← All holidays</button>
     <div style="max-width:680px;margin:0 auto;padding:clamp(96px,15vh,150px) clamp(22px,5vw,40px) 90px;animation:cdfade .6s both;">
-      <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.24em;text-transform:uppercase;color:#f5c542;margin-bottom:18px;">About</div>
+      <div style="font:600 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:#f5c542;margin-bottom:18px;">About</div>
       <h1 style="font:400 clamp(34px,5.5vw,64px)/1.04 'Instrument Serif';color:#fff;margin:0 0 28px;letter-spacing:-.01em;">A countdown for <span style="font-style:italic;color:#f5c542;">every</span> moment.</h1>
-      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 18px;">My countdown is the place to go for ticking down to your favorite holidays. Just click on the holiday you want, then watch as the full-screen countdown ticks it down. You can even make your own with any of the canvases and emojis. Any time, any style.</p>
-      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 34px;">You can share prebuilt and custom countdowns with a link that has the event and style encoded into it. Everything stays current. Every holiday rolls forward to its next date automatically, year after year.</p>
+      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.72);margin:0 0 18px;">My countdown is the place to go for ticking down to your favorite holidays. Just click on the holiday you want, then watch as the full-screen countdown ticks it down. You can even make your own with any of the canvases and emojis. Any time, any style.</p>
+      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.72);margin:0 0 34px;">You can share prebuilt and custom countdowns with a link that has the event and style encoded into it. Everything stays current. Every holiday rolls forward to its next date automatically, year after year.</p>
       <div style="display:flex;flex-direction:column;gap:14px;padding:22px 0;border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:34px;">
-        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">~50 holidays across religion, culture, seasons &amp; fun</span></div>
-        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">A dozen+ animated canvases, including emojis</span></div>
-        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">Custom countdowns with shareable links</span></div>
+        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.85);">~50 holidays across religion, culture, seasons &amp; fun</span></div>
+        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.85);">A dozen+ animated canvases, including emojis</span></div>
+        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.85);">Custom countdowns with shareable links</span></div>
       </div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
-        <button id="about-create" style="display:flex;align-items:center;gap:8px;font:600 14px/1 'Space Grotesk';color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:13px 22px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px -8px rgba(245,197,66,.6);">Create your own <span style="font-size:15px;">↗</span></button>
-        <button id="about-browse" style="font:600 14px/1 'Space Grotesk';color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:13px 22px;border-radius:999px;cursor:pointer;">Browse holidays</button>
+        <button id="about-create" style="display:flex;align-items:center;gap:8px;font:600 14px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:13px 22px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px -8px rgba(245,197,66,.6);">Create your own <span style="font-size:15px;">↗</span></button>
+        <button id="about-browse" style="font:600 14px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:13px 22px;border-radius:999px;cursor:pointer;">Browse holidays</button>
       </div>
-      <div style="font:500 13px/1 'Space Grotesk';color:rgba(255,255,255,.38);">by <a href="https://github.com/Raylu42x" target="_blank" rel="noopener" style="color:rgba(255,255,255,.55);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2);">Raylu42x</a></div>
+      <div style="font:500 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.38);">by <a href="https://github.com/Raylu42x" target="_blank" rel="noopener" style="color:rgba(255,255,255,.55);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2);">Raylu42x</a></div>
     </div>
   </div>`;
 }
@@ -501,8 +501,8 @@ function timerFullHTML(){
   const stageStyle=`position:absolute;inset:0;overflow:hidden;background:linear-gradient(165deg,${A.bg[0]} 0%,${A.bg[1]} 100%);`;
   return `<div style="${stageStyle}">
     <canvas id="timer-canvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:1;"></canvas>
-    <div style="position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(120% 90% at 50% 42%,transparent 40%,rgba(6,6,13,.55) 100%);"></div>
-    <button id="timer-back" style="position:absolute;top:22px;left:22px;z-index:5;display:flex;align-items:center;gap:8px;font:600 13px/1 'Space Grotesk';color:rgba(255,255,255,.82);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:10px 15px;border-radius:999px;cursor:pointer;">← All holidays</button>
+    <div style="position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(120% 90% at 50% 42%,transparent 40%,rgba(12,10,9,.55) 100%);"></div>
+    <button id="timer-back" style="position:absolute;top:22px;left:22px;z-index:5;display:flex;align-items:center;gap:8px;font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.82);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);padding:10px 15px;border-radius:999px;cursor:pointer;">← All holidays</button>
     <button id="timer-opts-btn" aria-label="Options" style="position:absolute;top:22px;right:22px;z-index:7;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);border-radius:50%;cursor:pointer;color:rgba(255,255,255,.85);">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h7M15 18h5"></path><circle cx="16" cy="6" r="2"></circle><circle cx="8" cy="12" r="2"></circle><circle cx="13" cy="18" r="2"></circle></svg>
     </button>
@@ -533,12 +533,12 @@ function timerCenterHTML(){
   const lab=Math.max(9, Math.min(16, num*0.13));
   const bigPx=Math.max(60, Math.min(winW*0.9, winH*0.86)*(0.5+0.5*size));
 
-  const tTagStyle=`font:600 12px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:${acc};opacity:.9;`;
+  const tTagStyle=`font:600 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:${acc};opacity:.9;`;
   const tNameStyle=`margin:14px 0 0;font:400 clamp(34px,6vw,76px)/1 'Instrument Serif';color:#fff;letter-spacing:-.01em;`;
   const boxesStyle=`display:flex;flex-wrap:wrap;justify-content:center;align-content:center;gap:${g}px;width:${Math.round(cw)}px;max-width:94vw;margin-top:clamp(16px,3.5vh,40px);`;
   const boxBase=`background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:18px;padding:${Math.round(num*0.2)}px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;`;
   const numBase=`font:700 ${Math.round(num)}px/1 'Space Grotesk';color:${acc};text-shadow:0 0 ${Math.round(num*0.3)}px ${acc}66;font-variant-numeric:tabular-nums;`;
-  const labBase=`margin-top:${Math.max(5,Math.round(num*0.1))}px;font:600 ${Math.round(lab)}px/1 'Space Grotesk';letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);`;
+  const labBase=`margin-top:${Math.max(5,Math.round(num*0.1))}px;font:600 ${Math.round(lab)}px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.5);`;
   const bigStyle=`font:700 ${Math.round(bigPx)}px/0.9 'Space Grotesk';color:${acc};text-shadow:0 0 ${Math.round(bigPx*0.3)}px ${acc};animation:cdpulse .9s infinite;margin-top:10px;`;
   const greetStyle=`font:400 clamp(40px,8vw,98px)/1 'Instrument Serif';font-style:italic;color:${acc};text-shadow:0 0 50px ${acc}55;`;
   const tLabelStyle=labBase;
@@ -554,7 +554,7 @@ function timerCenterHTML(){
   } else if(bigMode){
     body=`<div style="${bigStyle}">${pad(ss)}</div><div style="${tLabelStyle}">seconds to go</div>`;
   } else if(doneMode){
-    body=`<div style="${greetStyle}">${escHtml(A.greeting)}</div><div style="margin-top:14px;font:500 13px/1 'Space Grotesk';letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);">The moment is here</div>`;
+    body=`<div style="${greetStyle}">${escHtml(A.greeting)}</div><div style="margin-top:14px;font:500 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.55);">The moment is here</div>`;
   }
   return `<div style="${tTagStyle}">${escHtml(A.dateLabel)}</div><h2 style="${tNameStyle}">${escHtml(A.name)}</h2>${body}`;
 }
@@ -570,22 +570,22 @@ function optionsPanelHTML(){
       return `<button data-swatch="${escAttr(c)}" style="${style}"></button>`;
     }).join('');
     custFields = `
-      <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px;">Your countdown</div>
-      <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Title</label>
-      <input id="custom-title" type="text" value="${escAttr(st.custom.title)}" placeholder="My Countdown" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 14px 'Space Grotesk';margin-bottom:16px;">
-      <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Message at zero</label>
-      <input id="custom-message" type="text" value="${escAttr(st.custom.message)}" placeholder="e.g. Happy Birthday!" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 14px 'Space Grotesk';margin-bottom:16px;">
+      <div style="font:600 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:14px;">Your countdown</div>
+      <label style="display:block;font:500 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.6);margin:0 0 7px;">Title</label>
+      <input id="custom-title" type="text" value="${escAttr(st.custom.title)}" placeholder="My Countdown" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 14px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;margin-bottom:16px;">
+      <label style="display:block;font:500 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.6);margin:0 0 7px;">Message at zero</label>
+      <input id="custom-message" type="text" value="${escAttr(st.custom.message)}" placeholder="e.g. Happy Birthday!" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 14px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;margin-bottom:16px;">
       <div style="display:flex;gap:10px;margin-bottom:18px;">
         <div style="flex:1;">
-          <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Date</label>
-          <input id="custom-date" type="date" value="${escAttr(st.custom.dateISO)}" style="width:100%;padding:10px 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 13px 'Space Grotesk';">
+          <label style="display:block;font:500 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.6);margin:0 0 7px;">Date</label>
+          <input id="custom-date" type="date" value="${escAttr(st.custom.dateISO)}" style="width:100%;padding:10px 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 13px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
         </div>
         <div style="width:118px;">
-          <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 7px;">Time</label>
-          <input id="custom-time" type="time" value="${escAttr(st.custom.time)}" style="width:100%;padding:10px 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 13px 'Space Grotesk';">
+          <label style="display:block;font:500 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.6);margin:0 0 7px;">Time</label>
+          <input id="custom-time" type="time" value="${escAttr(st.custom.time)}" style="width:100%;padding:10px 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#fff;font:500 13px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
         </div>
       </div>
-      <label style="display:block;font:500 12px/1 'Space Grotesk';color:rgba(255,255,255,.6);margin:0 0 9px;">Accent</label>
+      <label style="display:block;font:500 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.6);margin:0 0 9px;">Accent</label>
       <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:22px;">${swatchHTML}</div>`;
   }
 
@@ -599,7 +599,7 @@ function optionsPanelHTML(){
       const active=st.custom.effect===e.id;
       return `<button data-effect="${escAttr(e.id)}" style="${rowStyle(active,acc)}">
         <canvas data-opt-idx="${i}" style="width:42px;height:42px;border-radius:9px;flex:none;background:linear-gradient(160deg,#14121d,#0a0810);box-shadow:inset 0 0 10px rgba(0,0,0,.5);"></canvas>
-        <span style="flex:1;text-align:left;font:600 13px/1 'Space Grotesk';color:#fff;">${escHtml(e.label)}</span>
+        <span style="flex:1;text-align:left;font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#fff;">${escHtml(e.label)}</span>
         <span style="${dotStyle(active,acc)}"></span>
       </button>`;
     }).join('');
@@ -610,7 +610,7 @@ function optionsPanelHTML(){
       const active=st.bg===i;
       return `<button data-bg-idx="${i}" style="${rowStyle(active,acc)}">
         <canvas data-opt-idx="${i}" style="width:42px;height:42px;border-radius:9px;flex:none;background:linear-gradient(160deg,#14121d,#0a0810);box-shadow:inset 0 0 10px rgba(0,0,0,.5);"></canvas>
-        <span style="flex:1;text-align:left;font:600 13px/1 'Space Grotesk';color:#fff;">${escHtml(b[1])}</span>
+        <span style="flex:1;text-align:left;font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#fff;">${escHtml(b[1])}</span>
         <span style="${dotStyle(active,acc)}"></span>
       </button>`;
     }).join('');
@@ -622,7 +622,7 @@ function optionsPanelHTML(){
   if(showEmojiBuilder){
     const selEmojis=st.custom.emojiList||[];
     const edir=st.custom.emojiDir||'fall';
-    const dirBtnStyle=(active)=>`flex:1;padding:10px;border-radius:11px;cursor:pointer;font:600 12px/1 'Space Grotesk';transition:all .2s;`+(active?`background:${acc};color:#0a0820;border:1px solid ${acc};`:`background:rgba(255,255,255,.04);color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.1);`);
+    const dirBtnStyle=(active)=>`flex:1;padding:10px;border-radius:11px;cursor:pointer;font:600 12px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;transition:all .2s;`+(active?`background:${acc};color:#0a0820;border:1px solid ${acc};`:`background:rgba(255,255,255,.04);color:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.1);`);
     const emojiButtons = CLEAN_EMOJIS.map(g=>{
       const on=selEmojis.includes(g); const full=selEmojis.length>=5&&!on;
       const style=`display:flex;align-items:center;justify-content:center;width:38px;height:38px;font-size:21px;line-height:1;border-radius:10px;cursor:${full?'not-allowed':'pointer'};opacity:${full?'.4':'1'};background:${on?'rgba(245,197,66,.16)':'rgba(255,255,255,.04)'};border:1px solid ${on?acc+'cc':'rgba(255,255,255,.1)'};transition:all .15s;`;
@@ -630,11 +630,11 @@ function optionsPanelHTML(){
     }).join('');
     emojiBuilder = `<div style="margin-top:22px;">
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px;">
-        <span style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);">Your emojis</span>
-        <span style="font:600 11px/1 'Space Grotesk';color:#f5c542;">${selEmojis.length}/5</span>
+        <span style="font:600 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);">Your emojis</span>
+        <span style="font:600 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#f5c542;">${selEmojis.length}/5</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;">${emojiButtons}</div>
-      <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Direction</div>
+      <div style="font:600 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Direction</div>
       <div style="display:flex;gap:9px;">
         <button data-dir="fall" style="${dirBtnStyle(edir==='fall')}">Fall ↓</button>
         <button data-dir="rise" style="${dirBtnStyle(edir==='rise')}">Rise ↑</button>
@@ -648,19 +648,19 @@ function optionsPanelHTML(){
 
   return `<div style="position:absolute;top:0;right:0;height:100%;width:min(380px,88vw);background:rgba(10,9,18,.82);backdrop-filter:blur(22px);border-left:1px solid rgba(255,255,255,.1);z-index:6;overflow-y:auto;padding:74px 22px 28px;animation:cdpanel .3s both;">
     ${custFields}
-    <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Number size</div>
+    <div style="font:600 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Number size</div>
     <input id="size-slider" type="range" min="0" max="1" step="0.01" value="${size}" style="width:100%;accent-color:#f5c542;height:24px;cursor:pointer;margin:0 0 20px;">
-    <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Animation speed</div>
+    <div style="font:600 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:11px;">Animation speed</div>
     <input id="speed-slider" type="range" min="0" max="1" step="0.01" value="${speed}" style="width:100%;accent-color:#f5c542;height:24px;cursor:pointer;margin:0 0 22px;">
-    <div style="font:600 11px/1 'Space Grotesk';letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:13px;">Canvas</div>
+    <div style="font:600 11px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:13px;">Canvas</div>
     <div style="display:flex;flex-direction:column;gap:9px;">${bgRowsHTML}</div>
     ${emojiBuilder}
     <div style="margin-top:26px;padding-top:22px;border-top:1px solid rgba(255,255,255,.09);">
-      <button id="copy-link-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;font:600 13px/1 'Space Grotesk';color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:13px;border-radius:12px;cursor:pointer;">
+      <button id="copy-link-btn" style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:13px;border-radius:12px;cursor:pointer;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"></path></svg>
         ${escHtml(copyLabel)}
       </button>
-      <div style="text-align:center;font:500 11px/1.4 'Space Grotesk';color:rgba(255,255,255,.38);margin-top:11px;">Share this link, settings travel with it.</div>
+      <div style="text-align:center;font:500 11px/1.4 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:rgba(255,255,255,.38);margin-top:11px;">Share this link, settings travel with it.</div>
     </div>
   </div>`;
 }
@@ -705,7 +705,7 @@ function updateGrid(){
   document.querySelectorAll('[data-filter]').forEach(btn=>{
     const k=btn.getAttribute('data-filter');
     const active=st.filter===k;
-    btn.setAttribute('style', "font:600 13px/1 'Space Grotesk';letter-spacing:.02em;padding:10px 16px;border-radius:999px;cursor:pointer;transition:all .25s;"+(active
+    btn.setAttribute('style', "font:600 13px/1 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:.02em;padding:10px 16px;border-radius:999px;cursor:pointer;transition:all .25s;"+(active
       ? 'color:#0a0820;background:#ece9f5;border:1px solid #ece9f5;'
       : 'color:rgba(255,255,255,.74);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);'));
   });
