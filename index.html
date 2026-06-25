@@ -126,7 +126,7 @@ const st = {
     title: 'My Countdown',
     dateISO: defaultDate(),
     time: '00:00',
-    tz: browserTz(),          // creator's timezone — preserves intent when URL is shared
+    tz: browserTz(),          // creator's timezone, preserves intent when URL is shared
     accent: '#f5c542',
     effect: 'confetti',
     message: '',
@@ -160,7 +160,7 @@ function rowStyle(active, acc){ return `display:flex;align-items:center;gap:12px
 function dotStyle(active, acc){ return `width:9px;height:9px;border-radius:50%;flex:none;background:${active?acc:'transparent'};box-shadow:${active?'0 0 10px '+acc:'inset 0 0 0 1.5px rgba(255,255,255,.25)'};`; }
 
 /* ============ Date engine ============
-   All occYear() outputs are local-time Date objects — holidays are intentionally
+   All occYear() outputs are local-time Date objects, holidays are intentionally
    anchored to each viewer's local calendar (Christmas at *your* midnight, etc).
    Custom countdowns can override this by carrying a TZ in the URL (see targetMs).
 */
@@ -184,14 +184,14 @@ function easter(year) {
   return { month, day };
 }
 
-// Nth weekday of a month (e.g. 4th Thursday of November → Thanksgiving).
+// Nth weekday of a month (e.g. 4th Thursday of November > Thanksgiving).
 function nthWeekday(year, month, weekday, n, time) {
   const first = new Date(year, month - 1, 1);
   const shift = (weekday - first.getDay() + 7) % 7;
   return new Date(year, month - 1, 1 + shift + (n - 1) * 7, time[0], time[1], 0);
 }
 
-// Last weekday of a month (e.g. last Monday of May → Memorial Day).
+// Last weekday of a month (e.g. last Monday of May > Memorial Day).
 function lastWeekday(year, month, weekday, time) {
   const last = new Date(year, month, 0);   // day 0 of next month = last day of this one
   const shift = (last.getDay() - weekday + 7) % 7;
@@ -290,7 +290,7 @@ function wallTimeToUtcMs(year, month, day, hour, minute, tz) {
     );
     return guess + (guess - seenAsUtc);
   } catch {
-    return guess;   // unknown tz — treat input as UTC
+    return guess;   // unknown tz, treat input as UTC
   }
 }
 
@@ -358,7 +358,7 @@ function syncHash(push) {
       t: c.title,
       d: c.dateISO,
       tm: c.time,
-      tz: c.tz,                // creator's timezone — required for shared URLs
+      tz: c.tz,                // creator's timezone, required for shared URLs
       a: c.accent,
       e: c.effect,
       s: st.size,
@@ -410,7 +410,7 @@ function parseHash() {
       st.speed = p.get('sp') == null ? 0.42 : parseFloat(p.get('sp'));
     }
   } catch {
-    /* malformed hash — ignore and stay on home */
+    /* malformed hash, ignore and stay on home */
   }
 }
 
@@ -469,7 +469,7 @@ function gridHTML(){
   const createTile=`<div id="create-tile" style="position:relative;overflow:hidden;border-radius:18px;height:clamp(170px,23vh,250px);cursor:pointer;border:1.5px dashed rgba(255,255,255,.18);background:rgba(255,255,255,.02);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;transition:border-color .3s,background .3s;">
     <div style="width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font:300 26px/1 'Space Grotesk';color:rgba(255,255,255,.7);">+</div>
     <div style="font:400 19px/1 'Instrument Serif';color:rgba(255,255,255,.82);">Create your own</div>
-    <div style="font:500 11px/1 'Space Grotesk';letter-spacing:.04em;color:rgba(255,255,255,.42);">Any date · any canvas</div>
+    <div style="font:500 11px/1 'Space Grotesk';letter-spacing:.04em;color:rgba(255,255,255,.42);">Any date on any canvas</div>
   </div>`;
   return cards+createTile;
 }
@@ -480,18 +480,18 @@ function aboutHTML(){
     <div style="max-width:680px;margin:0 auto;padding:clamp(96px,15vh,150px) clamp(22px,5vw,40px) 90px;animation:cdfade .6s both;">
       <div style="font:600 12px/1 'Space Grotesk';letter-spacing:.24em;text-transform:uppercase;color:#f5c542;margin-bottom:18px;">About</div>
       <h1 style="font:400 clamp(34px,5.5vw,64px)/1.04 'Instrument Serif';color:#fff;margin:0 0 28px;letter-spacing:-.01em;">A countdown for <span style="font-style:italic;color:#f5c542;">every</span> moment.</h1>
-      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 18px;">Countdown is a living calendar of the moments worth waiting for. Every holiday gets its own full-screen timer and its own animated canvas — fireworks on New Year's, snowfall at Christmas, lanterns rising for the Lunar New Year.</p>
-      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 18px;">Open any holiday to watch it tick down, switch between its hand-made canvases, or build a countdown of your own — a birthday, a launch, a trip — and share it with a link that carries every setting.</p>
-      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 34px;">And it keeps itself honest: every celebration rolls forward to its next date automatically, year after year.</p>
+      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 18px;">My countdown is the place to go for ticking down to your favorite holidays. Just click on the holiday you want, then watch as the full-screen countdown ticks it down. You can even make your own with any of the canvases and emojis. Any time, any style.</p>
+      <p style="font:400 clamp(15px,1.6vw,18px)/1.65 'Space Grotesk';color:rgba(255,255,255,.72);margin:0 0 34px;">You can share prebuilt and custom countdowns with a link that has the event and style encoded into it. Everything stays current. Every holiday rolls forward to its next date automatically, year after year.</p>
       <div style="display:flex;flex-direction:column;gap:14px;padding:22px 0;border-top:1px solid rgba(255,255,255,.1);border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:34px;">
-        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">40+ holidays across religion, culture, seasons & fun</span></div>
+        <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">~50 holidays across religion, culture, seasons &amp; fun</span></div>
         <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">A dozen+ animated canvases, including emojis</span></div>
         <div style="display:flex;align-items:center;gap:13px;"><span style="width:7px;height:7px;border-radius:50%;background:#f5c542;flex:none;box-shadow:0 0 10px #f5c542;"></span><span style="font:500 15px/1.4 'Space Grotesk';color:rgba(255,255,255,.85);">Custom countdowns with shareable links</span></div>
       </div>
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
         <button id="about-create" style="display:flex;align-items:center;gap:8px;font:600 14px/1 'Space Grotesk';color:#0a0820;background:linear-gradient(135deg,#fde68a,#f5c542);border:none;padding:13px 22px;border-radius:999px;cursor:pointer;box-shadow:0 8px 24px -8px rgba(245,197,66,.6);">Create your own <span style="font-size:15px;">↗</span></button>
         <button id="about-browse" style="font:600 14px/1 'Space Grotesk';color:rgba(255,255,255,.85);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);padding:13px 22px;border-radius:999px;cursor:pointer;">Browse holidays</button>
       </div>
+      <div style="font:500 13px/1 'Space Grotesk';color:rgba(255,255,255,.38);">by <a href="https://github.com/Raylu42x" target="_blank" rel="noopener" style="color:rgba(255,255,255,.55);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2);">Raylu42x</a></div>
     </div>
   </div>`;
 }
@@ -660,7 +660,7 @@ function optionsPanelHTML(){
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1.5 1.5"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1.5-1.5"></path></svg>
         ${escHtml(copyLabel)}
       </button>
-      <div style="text-align:center;font:500 11px/1.4 'Space Grotesk';color:rgba(255,255,255,.38);margin-top:11px;">Share this link — settings travel with it.</div>
+      <div style="text-align:center;font:500 11px/1.4 'Space Grotesk';color:rgba(255,255,255,.38);margin-top:11px;">Share this link, settings travel with it.</div>
     </div>
   </div>`;
 }
