@@ -65,7 +65,6 @@ hello@kervian.com
 ```
 index.html       — the whole site
 docs/            — screenshots and project notes
-project/         — original design handoff files (reference only)
 CNAME            — custom domain config for GitHub Pages
 ```
 
